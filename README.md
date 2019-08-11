@@ -162,4 +162,35 @@ iOS 面试题积累 - iOS 篇
 
    参考：http://stackoverflow.com/a/10843510/3395008
 
-10. CADisplayLink
+10. 消息转发（Message Forwarding）
+
+    ![message_forwarding](./img/message_forwarding.jpg)
+
+    [图片来源](https://juejin.im/post/5a30c6fdf265da4319564272)
+
+    - resolveInstanceMethod & resolveClassMethod：动态方法解析
+
+      > 当根据selector没有找到对应的method时，首先会调用这个方法，在该方法中你可以为一个类添加一个方法。并返回yes。
+
+    - forwardingTargetForSelector：快速转发
+
+      >如果resolveInstanceMethod没有实现，返回No，或者没有动态添加方法的话，就会执行forwardingTargetForSelector。 在这里你可以返回一个能够执行这个selector的对象otherTarget，接下来消息会重新发送到这个otherTarget。
+
+    - forwardInvocation：完整消息转发
+
+      > 如果前两步没有执行，就会执行通过forwardInvocation进行消息转发。
+      >
+      > 还需要重写methodSignatureForSelector
+
+    参考：a. https://juejin.im/post/5a30c6fdf265da4319564272
+
+    ​           b. https://juejin.im/post/5ae96e8c6fb9a07ac85a3860
+
+11. OC内存管理：retainCount
+
+----
+
+待补充：
+
+1. CADisplayLink
+2. Runloop model source timer
