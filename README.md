@@ -2,7 +2,7 @@
 
 iOS 面试题积累 - iOS 篇
 
-1. CALayer 中`anchorPoint` ` position` `CGAffineTransform` 概念
+1. CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念
 
    - anchorPoint：称为“定位点”、“锚点”，决定着CALayer上哪个点会在position属性所指的位置。以自己的左上角为原点`(0, 0)`，它的x、y取值范围都是0 - 1，默认值为`(0.5, 0.5)`。
 
@@ -29,9 +29,9 @@ iOS 面试题积累 - iOS 篇
      open var position: CGPoint
      ```
 
-   - CGAffineTransform：会影响subView。CGAffineTransform可以使控件的产生移动、缩放、旋转效果,其坐标系统采用的是二维坐标系,坐标原点为屏幕的左上角，**向右为x轴正方向,向下为y轴正方向**。
+   - CGAffineTransform：会影响subView。CGAffineTransform可以使控件产生移动、缩放、旋转效果，其坐标系统采用的是二维坐标系，坐标原点为屏幕的左上角，**向右为x轴正方向,向下为y轴正方向**。
 
-     - `CGAffineTransformMakeTranslation`实现以初始位置为基准,在x轴方向上平移x单位,在y轴方向上平移y单位
+     - `CGAffineTransformMakeTranslation`实现以初始位置为基准，在x轴方向上平移x单位，在y轴方向上平移y单位
 
        ```
        CGAffineTransformMakeTranslation(CGFloat tx, CGFloat ty)
@@ -69,9 +69,97 @@ iOS 面试题积累 - iOS 篇
 
        参考：https://www.jianshu.com/p/bb0b1e627baf
 
-     ```swift
-     
-     ```
+       
 
+2. 贝塞尔曲线
 
+   参考：https://www.jianshu.com/p/c5949adc7ec1
 
+3. Block 中引用成员变量需要先判断self是否为nil，
+
+   ```objective-c
+   __weak typeof(self) wSelf = self;
+   self.callBack = ^{
+       __strong typeof(wSelf) sSelf = wSelf;
+       if (sSelf) {
+           self -> _foo = @"";
+       }
+   };
+   ```
+
+4. Weak关键字：属性所指的对象遭到摧毁时，属性值也会清空(nil out)。runtime实现weak关键字原理：hash 表
+
+   > runtime 对注册的类， 会进行布局，对于 weak 对象会放入一个 hash 表中。 用 weak 指向的对象内存地址作为 key，value为weak指针的地址（这个地址的值是所指对象的地址）数组。当此对象的引用计数为0的时候会 dealloc，假如 weak 指向的对象内存地址是a，那么就会以a为键， 在这个 weak 表中搜索，找到所有以a为键的 weak 对象，从而设置为 nil。
+
+5. NSProxy：涉及相关概念：消息转发
+
+   > 翻译：NSProxy是一个抽象的超类，它定义了一个对象的API，用来充当其他对象或者一些不存在的对象的替身。通常，发送给Proxy的消息会被转发给实际对象，或使Proxy加载（转化为）实际对象。 NSProxy的子类可以用于实现透明的分布式消息传递(例如，NSDistantObject)，或者用于创建开销较大的对象的惰性实例化。
+
+   - 模拟多继承
+   - 解决NSTimer无法释放问题：[YYWeakProxy](https://github.com/ibireme/YYKit/blob/master/YYKit/Utility/YYWeakProxy.h)
+   - 实现多个不同对象的消息分发
+
+6. @synthesize和@dynamic分别有什么作用？
+
+   > - 如果 @synthesize和 @dynamic都没写，那么默认的就是`@syntheszie var = _var;`
+   >
+   > - @synthesize 的语义是如果你没有手动实现 setter 方法和 getter 方法，那么编译器会自动为你加上这两个方法。
+   >
+   > - @dynamic 告诉编译器：属性的 setter 与 getter 方法由用户自己实现，不自动生成。（当然对于 readonly 的属性只需提供 getter 即可）。假如一个属性被声明为 @dynamic var，然后你没有提供 @setter方法和 @getter 方法，编译的时候没问题，但是当程序运行到 `instance.var = someVar`，由于缺 setter 方法会导致程序崩溃；或者当运行到 `someVar = var` 时，由于缺 getter 方法同样会导致崩溃。编译时没问题，运行时才执行相应的方法，这就是所谓的动态绑定。
+
+7. NSTimer 的释放问题：可以采用block、NSProxy打破
+
+参考：https://juejin.im/post/5afaaf996fb9a07ac5604a92
+
+8. self & super
+
+   经典题目，判断打印结果
+
+   ```
+   @implementation Son : Father
+   - (id)init
+   {
+       self = [super init];
+       if (self)
+       {
+           NSLog(@"%@", NSStringFromClass([self class]));
+           NSLog(@"%@", NSStringFromClass([super class]));
+       }
+       return self;
+   }
+   @end
+   ```
+
+   结果：都是输出son。
+
+   分析：不管是`self`、还是`super`，经过消息传递，最终处理消息的方法都是`NSObject`中的`- (Class)class`方法，指向消息接受者是一样的，都是son这个实例。
+
+9. OC中对象的内存销毁时间表
+
+   >a. 调用 -release ：引用计数变为零
+   >
+   >* 对象正在被销毁，生命周期即将结束.
+   >* 不能再有新的 __weak 弱引用， 否则将指向 nil.
+   >* 调用 [self dealloc] 
+   >
+   >b. 子类调用 -dealloc
+   >
+   >- 继承关系中最底层的子类 在调用 -dealloc
+   >- 如果是 MRC 代码 则会手动释放实例变量们（iVars）
+   >- 继承关系中每一层的父类 都在调用 -dealloc
+   >
+   >c. NSObject 调 -dealloc
+   >
+   >- 只做一件事：调用 Objective-C runtime 中的 object_dispose() 方法
+   >
+   >d. 调用 object_dispose()
+   >
+   >* 为 C++ 的实例变量们（iVars）调用 destructors 
+   >* 为 ARC 状态下的 实例变量们（iVars） 调用 -release 
+   >* 解除所有使用 runtime Associate方法关联的对象
+   >* 解除所有 __weak 引用
+   >* 调用 free()
+
+   参考：http://stackoverflow.com/a/10843510/3395008
+
+10. CADisplayLink
