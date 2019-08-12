@@ -67,13 +67,13 @@ iOS 面试题积累 - iOS 篇
        CGAffineTransformRotate(CGAffineTransform t, CGFloat angle)
        ```
 
-       参考：https://www.jianshu.com/p/bb0b1e627baf
+       参考：[UIView的transform属性使用--CGAffineTransform(仿射变换)](https://www.jianshu.com/p/bb0b1e627baf)
 
        
 
 2. 贝塞尔曲线
 
-   参考：https://www.jianshu.com/p/c5949adc7ec1
+   参考：[谈谈贝塞尔曲线](https://www.jianshu.com/p/c5949adc7ec1)
 
 3. Block 中引用成员变量需要先判断self是否为nil，
 
@@ -109,7 +109,7 @@ iOS 面试题积累 - iOS 篇
 
 7. NSTimer 的释放问题：可以采用block、NSProxy打破
 
-参考：https://juejin.im/post/5afaaf996fb9a07ac5604a92
+参考：[NSTimer使用详解](https://juejin.im/post/5afaaf996fb9a07ac5604a92)
 
 8. self & super
 
@@ -160,7 +160,7 @@ iOS 面试题积累 - iOS 篇
    >* 解除所有 __weak 引用
    >* 调用 free()
 
-   参考：http://stackoverflow.com/a/10843510/3395008
+   参考：[Will An Associated Object Be Released Automatically?](https://stackoverflow.com/questions/10842829/will-an-associated-object-be-released-automatically)
 
 10. 消息转发（Message Forwarding）
 
@@ -182,11 +182,124 @@ iOS 面试题积累 - iOS 篇
       >
       > 还需要重写methodSignatureForSelector
 
-    参考：a. https://juejin.im/post/5a30c6fdf265da4319564272
+    参考：a. [iOS 消息转发流程](https://juejin.im/post/5a30c6fdf265da4319564272)
 
-    ​           b. https://juejin.im/post/5ae96e8c6fb9a07ac85a3860
+    ​           b. [iOS开发·runtime原理与实践: 消息转发篇](https://juejin.im/post/5ae96e8c6fb9a07ac85a3860)
 
 11. OC内存管理：retainCount
+
+12. iOS线程、同步异步、串行并行队列
+
+    - 从线程的时效来看，分别同步和异步
+
+    > 同步：就是在发出一个功能调用时，在没有得到结果之前，该调用就不返回，程序也不会接着往下执行。按照这个定义，其实绝大多数函数都是同步调用。
+
+    > 异步：当一个异步过程调用发出后，调用者不能立刻得到结果。实际处理这个调用的部件在完成后，通过状态、通知和回调（Handler机制）来通知调用者。
+
+    - 从线程的执行来看，线程队列分为串行队列和并行队列
+
+    > 串行和并行最大的不同的就是执行上，串行是依次执行，只有当前线程结束之后，另一个线程才开启。而并行是所有任务一起执行，执行的表现形式不同。
+
+13. KVC Collection Operators(集合操作符)
+
+    - Simple Collection Operators
+
+      - `@count`返回一个值为集合中对象总数的NSNumber对象;
+
+      - `@avg`首先把集合中的每个对象都转换为double类型,然后计算其平均值,并返回这个平均值的NSNumber对象;
+      - `@max`使用compare:方法来确定最大值,并返回最大值的NSNumber对象.所以为了保证其正常比较,集合中所有的对象都必须支持和另一个对象的比较,保证其可比性;
+      - `@min`原理和@max一样,其返回的是集合中的最小值的NSNumber对象;
+      - `@sum`首先把集合中的每个对象都转换为double类型,然后计算其总和,并返回总和的NSNumber对象;
+
+    ```objective-c
+    NSArray *product = @[productA, productB, productC, productD];
+    NSNumber *count = [product valueForKeyPath:@"@count.price"];
+    NSNumber *avg = [product valueForKeyPath:@"@avg.price"];
+    NSNumber *max = [product valueForKeyPath:@"@max.price"];
+    NSNumber *min = [product valueForKeyPath:@"@min.price"];
+    NSNumber *sum = [product valueForKeyPath:@"@sum.price"];
+    NSLog(@"count:%@, avg:%@, max:%@, min:%@, sum:%@", count, avg, max, min, sum); 
+    // count:4, avg:199, max:299, min:99, sum:796
+    ```
+
+    ```objective-c
+    NSArray *array = @[@(productA.price), @(productB.price), @(productC.price), @(productD.price)];
+    NSNumber *count = [array valueForKeyPath:@"@count"];
+    NSNumber *avg = [array valueForKeyPath:@"@avg.self"];
+    NSNumber *max = [array valueForKeyPath:@"@max.self"];
+    NSNumber *min = [array valueForKeyPath:@"@min.self"];
+    NSNumber *sum = [array valueForKeyPath:@"@sum.self"];
+    NSLog(@"count:%@, avg:%@, max:%@, min:%@, sum:%@", count, avg, max, min, sum);
+    //count:4, avg:199, max:299, min:99, sum:796
+    ```
+
+    - Object Operators
+
+      - @unionOfObjects:`获取数组中每个对象的属性的值,放到一个数组中并返回,但不会去重;`The @unionOfObjects operator provides similar behavior, but without removing duplicate objects.
+      - @distinctUnionOfObjects:`获取数组中每个对象的属性的值,放到一个数组中并返回,会对数组去重.所以,通常这个对象操作符可以用来对数组元素的去重,快捷高效;`The @distinctUnionOfArrays operator is similar, but removes duplicate objects.
+
+      ```
+      NSArray *unionOfObjects = [product valueForKeyPath:@"@unionOfObjects.name"];
+      NSArray *distinctUnionOfObjects = [product valueForKeyPath:@"@distinctUnionOfObjects.name"];
+      NSLog(@"unionOfObjects : %@", unionOfObjects);//iPod,iMac,iPhone,iPhone
+      NSLog(@"distinctUnionOfObjects : %@", distinctUnionOfObjects);//iPhone,iPod,iMac
+      ```
+
+    - Array and Set Operators
+
+      - `@distinctUnionOfArrays` 返回操作对象(数组)中的所有元素,即返回这个数组本身.会去重.
+
+      - `@unionOfArrays` 首先获取操作对象(数组)中的所有元素,然后装到一个新的数组中并返回,不会对这个数组去重.
+
+        ```
+        NSArray *distinctUnionOfArrays = [@[product, product] valueForKeyPath:@"@distinctUnionOfArrays.price"];
+        NSArray *unionOfArrays = [@[product, product] valueForKeyPath:@"@unionOfArrays.price"];
+        NSLog(@"distinctUnionOfArrays : %@", distinctUnionOfArrays);//299,99,199
+        NSLog(@"unionOfArrays : %@", unionOfArrays);//99,199,299,199,99,199,299,199
+        ```
+
+      - `@distinctUnionOfSets`返回操作对象（且操作对象内对象必须是数组/集合）中数组/集合的所有对象，返回值为集合.因为集合不能包含重复的值,所以它只有distinct操作
+
+        ```objective-c
+        NSSet *setA = [NSSet setWithObjects:productA, productB, nil];
+        NSSet *setB = [NSSet setWithObjects:productC, productD, nil];
+        NSSet *set = [NSSet setWithObjects:setA, setB, nil];
+        
+        NSSet *allSet = [set valueForKeyPath:@"@distinctUnionOfSets.name"];
+        NSLog(@"distinctUnionOfSets: %@", allSet);//iPhone,iPod,iMac
+        ```
+
+    参考：[iOS KVC Collection Operators(集合操作符)](https://www.jianshu.com/p/2c2af5695904)
+
+14. CADisplayLink
+
+    > CADisplayLink是一个能让我们以和屏幕刷新率相同的频率将内容画到屏幕上的定时器。我们在应用中创建一个新的CADisplayLink对象，把它添加到一个runloop中，并给它提供一个target和selector在屏幕刷新的时候调用。
+
+    与NSTimer的区别：
+
+    >iOS设备的屏幕刷新频率是固定的，CADisplayLink在正常情况下会在每次刷新结束都被调用，精确度相当高。
+
+    > NSTimer的精确度就显得低了点，比如NSTimer的触发时间到的时候，runloop如果在阻塞状态，触发时间就会推迟到下一个runloop周期。并且NSTimer新增了tolerance属性，让用户可以设置可以容忍的触发的时间的延迟范围。
+
+    使用：
+
+    ```objective-c
+    self.displayLink= [CADisplayLink 			    		displayLinkWithTarget:selfselector:@selector(updateTextColor)];
+    
+    self.displayLink.paused=YES;
+    
+    [self.displayLinkaddToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+    
+    -(void)updateTextColor{}
+    
+    - (void)startAnimation{
+        
+        self.beginTime= CACurrentMediaTime();
+        self.displayLink.paused=NO;
+    }
+    ```
+
+    
 
 ----
 
