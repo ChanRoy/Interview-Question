@@ -391,11 +391,174 @@ iOS 面试题积累 - iOS 篇
 
       参考：[ Runloop](https://hit-alibaba.github.io/interview/iOS/ObjC-Basic/Runloop.html)
 
+16. 关联对象（associatedObject）
+
+    >在分类中到底能否实现属性？其实在回答这个问题之前，首先要知道到底属性是什么？而属性的概念决定了这个问题的答案。
+    >
+    >- 如果你把属性理解为**通过方法访问的实例变量**，我相信这个问题的答案是不能，**因为分类不能为类增加额外的实例变量**。
+    >- 不过如果属性只是一个**存取方法以及存储值的容器的集合**，那么分类是可以实现属性的。
+
+    ```objective-c
+    // 关联对象
+    // 使用objc_setAssociatedObject函数可以给某个对象关联其他的对象。
+    void objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
+     
+    // 获取关联的对象
+    // 使用objc_getAssociatedObject函数可以通过键来取出某个对象的关联对象。
+    id objc_getAssociatedObject(id object, const void *key)
+     
+    // 移除关联的对象
+    // 使用objc_removeAssociatedObjects函数可以移除某个对象身上的所有关联的对象。
+    void objc_removeAssociatedObjects(id object)
+    ```
+
+    ```objective-c
+    typedef OBJC_ENUM(uintptr_t, objc_AssociationPolicy) {
+        OBJC_ASSOCIATION_ASSIGN = 0,           /**< Specifies a weak reference to the associated object. */
+        OBJC_ASSOCIATION_RETAIN_NONATOMIC = 1, /**< Specifies a strong reference to the associated object. 
+                                                *   The association is not made atomically. */
+        OBJC_ASSOCIATION_COPY_NONATOMIC = 3,   /**< Specifies that the associated object is copied. 
+                                                *   The association is not made atomically. */
+        OBJC_ASSOCIATION_RETAIN = 01401,       /**< Specifies a strong reference to the associated object.
+                                                *   The association is made atomically. */
+        OBJC_ASSOCIATION_COPY = 01403          /**< Specifies that the associated object is copied.
+                                                *   The association is made atomically. */
+    };
+    ```
+
+    >关联对象又是如何实现并且管理的呢：
+    >
+    >- 关联对象其实就是 `ObjcAssociation` 对象
+    >- 关联对象由 `AssociationsManager` 管理并在 `AssociationsHashMap` 存储
+    >- 对象的指针以及其对应 `ObjectAssociationMap` 以键值对的形式存储在 `AssociationsHashMap` 中
+    >- `ObjectAssociationMap` 则是用于存储关联对象的数据结构
+    >- 每一个对象都有一个标记位 `has_assoc` 指示对象是否含有关联对象
+
+    参考：[关联对象 AssociatedObject 完全解析](https://draveness.me/ao)
+
+17. iOS各种锁
+
+    a. OSSpinLock（自旋锁？）
+
+    b. dispatch_semaphore（信号量）
+
+    ```
+    dispatch_semaphore_t signal = dispatch_semaphore_create(1); //传入值必须 >=0, 若传入为0则阻塞线程并等待timeout,时间到后会执行其后的语句
+    dispatch_time_t overTime = dispatch_time(DISPATCH_TIME_NOW, 3.0f * NSEC_PER_SEC);
+    
+    //线程1
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSLog(@"线程1 等待ing");
+        dispatch_semaphore_wait(signal, overTime); //signal 值 -1
+        NSLog(@"线程1");
+        dispatch_semaphore_signal(signal); //signal 值 +1
+        NSLog(@"线程1 发送信号");
+    });
+    ```
+
+    > **dispatch_semaphore_create(1)：**传入值必须 `>=0`, 若传入为 `0`则阻塞线程并等待timeout,时间到后会执行其后的语句
+    > **dispatch_semaphore_wait(signal, overTime)：**可以理解为 `lock`,会使得 `signal`值 `-1`
+    > **dispatch_semaphore_signal(signal)：**可以理解为 `unlock`,会使得 `signal`值 `+1`
+
+    关于信号量，我们可以用停车来比喻：
+
+    >停车场剩余4个车位，那么即使同时来了四辆车也能停的下。如果此时来了五辆车，那么就有一辆需要等待。
+    >**信号量的值（signal）**就相当于剩余车位的数目，`dispatch_semaphore_wait`函数就相当于来了一辆车，`dispatch_semaphore_signal`就相当于走了一辆车。停车位的剩余数目在初始化的时候就已经指明了（dispatch_semaphore_create（long value）），调用一次 dispatch_semaphore_signal，剩余的车位就增加一个；调用一次dispatch_semaphore_wait 剩余车位就减少一个；当剩余车位为 0 时，再来车（即调用 dispatch_semaphore_wait）就只能等待。有可能同时有几辆车等待一个停车位。有些车主没有耐心，给自己设定了一段等待时间，这段时间内等不到停车位就走了，如果等到了就开进去停车。而有些车主就像把车停在这，所以就一直等下去。
+    >作者：ifelseboyxx链接：https://www.jianshu.com/p/8b8a01dd6356来源：简书简书著作权归作者所有，任何形式的转载都请联系作者获得授权并注明出处。
+
+    c. pthread_mutex（互斥锁）（OSSpinLock不再安全，首选这个）
+
+    ```
+    static pthread_mutex_t pLock;
+    pthread_mutex_init(&pLock, NULL);
+     //1.线程1
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSLog(@"线程1 准备上锁");
+        pthread_mutex_lock(&pLock);
+        sleep(3);
+        NSLog(@"线程1");
+        pthread_mutex_unlock(&pLock);
+    });
+    
+    //1.线程2
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSLog(@"线程2 准备上锁");
+        pthread_mutex_lock(&pLock);
+        NSLog(@"线程2");
+        pthread_mutex_unlock(&pLock);
+    });
+    ```
+
+    d. pthread_mutex(recursive)，递归锁
+
+    ```
+    static pthread_mutex_t pLock;
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr); //初始化attr并且给它赋予默认
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE); //设置锁类型，这边是设置为递归锁
+    pthread_mutex_init(&pLock, &attr);
+    pthread_mutexattr_destroy(&attr); //销毁一个属性对象，在重新进行初始化之前该结构不能重新使用
+    
+    //1.线程1
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        static void (^RecursiveBlock)(int);
+        RecursiveBlock = ^(int value) {
+            pthread_mutex_lock(&pLock);
+            if (value > 0) {
+                NSLog(@"value: %d", value);
+                RecursiveBlock(value - 1);
+            }
+            pthread_mutex_unlock(&pLock);
+        };
+        RecursiveBlock(5);
+    });
+    ```
+
+    e. NSLock
+
+    >**lock、unlock**：不多做解释，和上面一样
+    >**trylock**：能加锁返回 YES 并执行**加锁**操作，相当于 lock，反之返回 NO
+    >**lockBeforeDate**：这个方法表示会在传入的时间内尝试加锁，若能加锁则执行加锁操作并返回 YES，反之返回 NO
+
+    f. NSCondition
+
+    ```
+    NSCondition *cLock = [NSCondition new];
+    //线程1
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSLog(@"start");
+        [cLock lock];
+        [cLock waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:2]];
+        NSLog(@"线程1");
+        [cLock unlock];
+    });
+    ```
+
+    g. NSRecursiveLock（递归锁）
+
+    h. @synchronized（同步锁）
+
+    i. NSConditionLock（条件锁）
+
+    参考：[iOS 开发中的八种锁（Lock）](https://www.jianshu.com/p/8b8a01dd6356)
+
+18. 响应链
+
+    
+
+    ![default_responder_chain](./img/default_responder_chain.png)
+
+
+
+
+
 ----
+
+
 
 待补充：
 
 2. NSDictionary 底层原理：Hash表、负载因子、扩容
-2. iOS各种锁
 3. 响应链
+4. +load +initialize
 
