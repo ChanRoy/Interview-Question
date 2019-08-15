@@ -2,6 +2,16 @@
 
 iOS 面试题积累 - iOS 篇
 
+### 索引
+
+1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./README.md#1-CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念)
+2. [贝塞尔曲线](./README.md#2-贝塞尔曲线)
+3. [Block 中引用成员变量需要先判断self是否为nil](./README.md#3-Block 中引用成员变量需要先判断self是否为nil)
+
+
+
+--------
+
 1. CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念
 
    - anchorPoint：称为“定位点”、“锚点”，决定着CALayer上哪个点会在position属性所指的位置。以自己的左上角为原点`(0, 0)`，它的x、y取值范围都是0 - 1，默认值为`(0.5, 0.5)`。
@@ -75,7 +85,7 @@ iOS 面试题积累 - iOS 篇
 
    参考：[谈谈贝塞尔曲线](https://www.jianshu.com/p/c5949adc7ec1)
 
-3. Block 中引用成员变量需要先判断self是否为nil，
+3. Block 中引用成员变量需要先判断self是否为nil
 
    ```objective-c
    __weak typeof(self) wSelf = self;
@@ -550,7 +560,25 @@ iOS 面试题积累 - iOS 篇
 
 
 
+19. Category & Extension
 
+    a. Category的作用
+
+    - 为已经存在的类添加方法
+    - 把类的实现分开在几个不同的文件里面
+    - 声明私有方法
+    - 模拟多继承（少用、不重要）
+    - 把framework的私有方法公开
+
+    b. Category的理解
+
+    > category只能给某个已有的类扩充方法，不能扩充成员变量。
+    >
+    > category中也可以添加属性，只不过@property只会生成setter和getter的声明，不会生成setter和getter的实现以及成员变量。
+    >
+    > 如果category中的方法和类中原有方法同名，运行时会优先调用category中的方法。也就是，category中的方法会覆盖掉类中原有的方法。所以开发中尽量保证不要让分类中的方法和原有类中的方法名相同。避免出现这种情况的解决方案是给分类的方法名统一添加前缀。比如category_。
+    >
+    > 如果多个category中存在同名的方法，运行时到底调用哪个方法由编译器决定，最后一个参与编译的方法会被调用。
 
 ----
 
@@ -561,4 +589,6 @@ iOS 面试题积累 - iOS 篇
 2. NSDictionary 底层原理：Hash表、负载因子、扩容
 3. 响应链
 4. +load +initialize
+5. AutoReleasePool
+6. FMDB线程安全
 
