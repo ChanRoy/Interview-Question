@@ -4,7 +4,7 @@ iOS 面试题积累 - iOS 篇
 
 ### 索引
 
-1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./README.md#1-CALayer 中)
+1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./README.md#1-CALayer 中anchorPointpositionUIView的transformCGAffineTransform概念)
 
 2. [贝塞尔曲线](./README.md#2-贝塞尔曲线)
 
