@@ -85,17 +85,17 @@ iOS 面试题积累 - iOS 篇
 
 参考：[谈谈贝塞尔曲线](https://www.jianshu.com/p/c5949adc7ec1)
 
-3. Block 中引用成员变量需要先判断self是否为nil
+### 3. Block 中引用成员变量需要先判断self是否为nil
 
-   ```objective-c
-   __weak typeof(self) wSelf = self;
-   self.callBack = ^{
-       __strong typeof(wSelf) sSelf = wSelf;
-       if (sSelf) {
-           self -> _foo = @"";
-       }
-   };
-   ```
+```objective-c
+__weak typeof(self) wSelf = self;
+self.callBack = ^{
+    __strong typeof(wSelf) sSelf = wSelf;
+    if (sSelf) {
+        self -> _foo = @"";
+    }
+};
+```
 
 4. Weak关键字：属性所指的对象遭到摧毁时，属性值也会清空(nil out)。runtime实现weak关键字原理：hash 表
 
