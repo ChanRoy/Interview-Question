@@ -4,13 +4,29 @@ iOS 面试题积累 - iOS 篇
 
 ### 索引
 
-1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./README.md#1--calayer-中anchorpoint--positionuiview的-transform-cgaffinetransform-概念)
-
+1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./README.md#1-calayer-中anchorpoint--positionuiview的-transform-cgaffinetransform-概念)
 2. [贝塞尔曲线](./README.md#2-贝塞尔曲线)
+3. [Block 中引用成员变量需要先判断self是否为nil](./README.md#3-block-中引用成员变量需要先判断self是否为nil)
+4. [Weak关键字：属性所指的对象遭到摧毁时，属性值也会清空(nil out)。runtime实现weak关键字原理：hash 表](./README.md#4-weak关键字属性所指的对象遭到摧毁时属性值也会清空nil-outruntime实现weak关键字原理hash-表)
+5. [NSProxy：涉及相关概念：消息转发](./README.md#5-nsproxy涉及相关概念消息转发)
+6. [@synthesize和@dynamic分别有什么作用？](./README.md#6-synthesize和dynamic分别有什么作用)
+7. [NSTimer 的释放问题：可以采用block、NSProxy打破](./README.md#7-nstimer-的释放问题可以采用blocknsproxy打破)
+8. [self & super](./README.md#8-self--super)
+9. [OC中对象的内存销毁时间表](./README.md#9-oc中对象的内存销毁时间表)
+10. [消息转发（Message Forwarding）](./README.md#9-oc中对象的内存销毁时间表)
+11. [OC内存管理：retainCount](./README.md#11-oc内存管理retaincount)
+12. [iOS线程、同步异步、串行并行队列](./README.md#12-ios线程同步异步串行并行队列)
+13. [KVC Collection Operators(集合操作符)](./README.md#13-kvc-collection-operators集合操作符)
+14. [CADisplayLink](./README.md#14-cadisplaylink)
+15. [Runloop](./README.md#15-runloop)
+16. [关联对象（associatedObject）](./README.md#16-关联对象associatedobject)
+17. [iOS各种锁](./README.md#17-ios各种锁)
+18. [响应链](./README.md#17-ios各种锁)
+19. [Category & Extension](./README.md#19-category--extension)
 
-3. [Block 中引用成员变量需要先判断self是否为nil](。/README.md#3-block-中引用成员变量需要先判断self是否为nil)
 
-   
+
+--------
 
 ### 1. CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念
 
