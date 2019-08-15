@@ -4,9 +4,9 @@ iOS 面试题积累 - iOS 篇
 
 ### 索引
 
-1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](https://github.com/ChanRoy/Interview-Question/blob/master/README.md#1-CALayer 中anchorPoint position，UIView的 transform CGAffineTransform 概念)
+1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./README.md#1-CALayer中anchorPoint-position，UIView的transform-CGAffineTransform 概念)
 
-2. [贝塞尔曲线](https://github.com/ChanRoy/Interview-Question/blob/master/README.md#2-贝塞尔曲线)
+2. [贝塞尔曲线](./README.md#2-贝塞尔曲线)
 
 3. [Block 中引用成员变量需要先判断self是否为nil](https://github.com/ChanRoy/Interview-Question/blob/master/README.md#3-Block 中引用成员变量需要先判断self是否为nil)
 
