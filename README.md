@@ -24,7 +24,7 @@ iOS 面试题积累 - iOS 篇
 18. [响应链](./README.md#17-ios各种锁)
 19. [Category & Extension](./README.md#19-category--extension)
 
-
+20. [NSDictionary 底层原理：Hash表、散列碰撞、负载因子、自动扩容、重Hash](./README.md#20-nsdictionary-底层原理hash表散列碰撞负载因子自动扩容重hash)
 
 --------
 
@@ -645,11 +645,36 @@ i. NSConditionLock（条件锁）
 
 ### 18. 响应链
 
-  
+当用户的手指点击屏幕的时候，iOS操作系统通过触摸屏获取用户的点击行为，然后把这个点击信息包装成UITouch和UIEvent形式的实例，然后找到当前运行的程序，在这个程序中逐级寻找能够响应这个事件的所有对象，然后把这些对象放入一个链表，这个链表就是iOS的响应链。
+
+ UIResponder提供了四个方法来响应点击事件：
+
+```objective-c
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event;
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event;
+```
+
+举例：用户点击了某个View，系统会接收到这个点击事件，然后调用：
+
+```
+- (BOOL)pointInside:(CGPoint)point withEvent:(nullable UIEvent *)event;  
+```
+
+方法，该方法是判断点击的点是够在本对象内，如果返回true则继续调用：
+
+```
+- (nullable UIView *)hitTest:(CGPoint)point withEvent:(nullable UIEvent *)event;
+```
+
+**事件的传递是从上到下的，事件的响应是从下到上的。**
+
+响应链已经建立起来，那么下面就该响应用户刚才的那次点击了，首先找到第一响应者DView，看他有没有处理这次点击事件，如果DView不处理就通过响应链找到它的nextResponder-CView，CView如果也不处理就会一直向上寻找，如果最终找到响应链的最后一个响应者AppDelegate也不处理，就会丢弃这次点击事件。
 
 ![default_responder_chain](./img/default_responder_chain.png)
 
-
+参考：[iOS 响应链](https://juejin.im/entry/58f5b7d0570c35005648a1ba)
 
 ### 19. Category & Extension
 
@@ -710,7 +735,47 @@ isEqual方法是为了通过hash值来找到对象在hash表中的位置。
 
 ​           b. [iOS底层原理：NSDictionary原理](https://www.jianshu.com/p/0d7cd6341f65)      
 
+###  21. +load & +initialize
 
+- +load
+
+  当类被引用进项目的时候就会执行load函数(在main函数开始执行之前），与这个类是否被用到无关，每个类的load函数只会自动调用一次。由于load函数是系统自动加载的，因此不需要调用父类的load函数，否则父类的load函数会多次执行。
+
+  - 当父类和子类都实现load函数时，父类的load方法执行顺序要优先于子类
+  - 当子类未实现load方法时，不会调用父类load方法
+  - 类中的load方法执行顺序要优先于类别(Category)
+  - 当有多个类别(Category)都实现了load方法，这几个load方法都会执行，但执行顺序不确定(其执行顺序与类别在Compile Sources中出现的顺序一致)
+  - 当然当有多个不同的类的时候,每个类load 执行顺序与其在Compile Sources出现的顺序一致
+
+- +initialize
+
+  initialize在类或者其子类的第一个方法被调用前调用。即使类文件被引用进项目，但是没有使用，initialize不会被调用。由于是系统自动调用，也不需要再调用 [super initialize] ，否则父类的initialize会被多次执行。假如这个类放到代码中，而这段代码并没有被执行，这个函数是不会被执行的。
+
+  - 父类的initialize方法会比子类先执行
+  - 当子类未实现initialize方法时，会调用父类initialize方法，子类实现initialize方法时，会覆盖父类initialize方法.
+  - 当有多个Category都实现了initialize方法，会覆盖类中的方法，只执行一个(会执行Compile Sources 列表中最后一个Category 的initialize方法)
+
+- +load & +initialize 使用场景
+
+  调用load方法时的环境很不安全，我们应该尽量减少load方法的逻辑；
+
+  load方法是线程安全的，它内部使用了锁，所以我们应该避免线程阻塞在load方法中；
+
+  load很常见的一个使用场景，runtime交换两个方法的实现（method swizzling）；
+
+  initialize方法主要用来对一些不方便在编译期初始化的对象进行赋值。比如NSMutableArray这种类型的实例化依赖于runtime的消息发送，所以显然无法在编译器初始化；
+
+参考：[iOS类方法load和initialize详解](https://juejin.im/post/5a31dc40f265da4307034712)
+
+### 22. 自动释放池（AutoReleasePool）
+
+AutoreleasePool并没有单独的结构，而是由若干个AutoreleasePoolPage以双向链表的形式组合而成的栈结构（分别对应结构中的parent指针和child指针）
+
+自动释放池是一个个 AutoreleasePoolPage 组成的一个page是4096字节大小,每个 AutoreleasePoolPage 以双向链表连接起来形成一个自动释放池
+
+当对象调用 autorelease 方法时，会将对象加入 AutoreleasePoolPage 的栈中
+
+pop 时是传入边界对象,然后对page 中的对象发送release 的消息
 
 ----
 
@@ -718,21 +783,16 @@ isEqual方法是为了通过hash值来找到对象在hash表中的位置。
 
 待补充：
 
-3. 响应链
-4. +load +initialize
-5. AutoReleasePool
 6. FMDB线程安全
-5. UITableView 卡顿的原因，如何优化
-6. NSTimer是否精准，有什么精准的替代方式
-7. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
-8. GCD原理，以及遇到的坑
-9. 快速排序
-10. 二叉树，给出两个子节点，快速找到最小父节点
-11. Runloop原理
-12. AutoReleasePool原理，是否看过源码
-13. FPS如何计算
-14. 循环引用、FaceBook第三方库的实现原理
-15. iOS 性能优化做了哪些常识
-16. Instrument
-17. 可能造成循环引用的场景
+2. UITableView 卡顿的原因，如何优化
+3. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
+4. GCD原理，以及遇到的坑
+5. 快速排序
+6. 二叉树，给出两个子节点，快速找到最小父节点
+7. Runloop原理
+8. FPS如何计算
+9. 循环引用、FaceBook第三方库的实现原理
+10. iOS 性能优化做了哪些尝试
+11. Instrument
+12. 可能造成循环引用的场景
 
