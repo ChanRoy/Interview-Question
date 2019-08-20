@@ -135,7 +135,82 @@ self.callBack = ^{
 
 ### 7. NSTimer 的释放问题：可以采用block、NSProxy打破
 
+a . NSTimer 的释放问题：可以采用block、NSProxy打破
+
 参考：[NSTimer使用详解](https://juejin.im/post/5afaaf996fb9a07ac5604a92)
+
+b. NSTimer 的精确度
+
+NSTimer的精确度一般能达到1ms，也就是小于1毫秒时，误差会很大。
+
+原因：定时器被添加在主线程中，由于定时器在一个RunLoop中被检测一次，所以如果在这一次的RunLoop中做了耗时的操作，当前RunLoop持续的时间超过了定时器的间隔时间，那么下一次定时就被延后了。
+
+c. 精准度更高的定时器
+
+- 纳秒级精度的Timer
+
+  ```
+  #include <mach mach.h="">
+   #include <mach mach_time.h="">
+   static const uint64_t NANOS_PER_USEC = 1000ULL;
+  
+   static const uint64_t NANOS_PER_MILLISEC = 1000ULL * NANOS_PER_USEC;
+   static const uint64_t NANOS_PER_SEC = 1000ULL * NANOS_PER_MILLISEC;
+   static mach_timebase_info_data_t timebase_info;
+  
+   static uint64_t nanos_to_abs(uint64_t nanos) {
+  
+   return nanos * timebase_info.denom / timebase_info.numer;
+  
+   }
+   void waitSeconds(int seconds) {
+  
+   mach_timebase_info(&timebase_info);
+  
+   uint64_t time_to_wait = nanos_to_abs(seconds * NANOS_PER_SEC);
+  
+   uint64_t now = mach_absolute_time();
+  
+   mach_wait_until(now + time_to_wait);
+  
+   }</mach></mach>
+  //理论上这是iPhone上最精准的定时器，可以达到纳秒级别的精度
+  ```
+
+- CADisplayLink
+
+  ```objective-c
+  CADisplayLink * displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(logInfo)];
+   [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+  //CADisplayLink是一个频率能达到屏幕刷新率的定时器类。iPhone屏幕刷新频率为60帧/秒，也就是说最小间隔可以达到1/60s。
+  ```
+
+- GCD定时器
+
+  ```objective-c
+  NSTimeInterval interval = 1.0;
+   _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+  
+   dispatch_source_set_timer(_timer, dispatch_walltime(NULL, 0), interval * NSEC_PER_SEC, 0);
+  
+   dispatch_source_set_event_handler(_timer, ^{
+  
+   NSLog(@"GCD timer test");
+  
+   });
+   dispatch_resume(_timer);
+  //RunLoop是dispatch_source_t实现的timer，所以理论上来说，GCD定时器的精度比NSTimer只高不低。
+  ```
+
+  
+
+  
+
+  
+
+  
+
+  
 
 ### 8. self & super
 
@@ -595,6 +670,47 @@ b. Category的理解
 > 如果category中的方法和类中原有方法同名，运行时会优先调用category中的方法。也就是，category中的方法会覆盖掉类中原有的方法。所以开发中尽量保证不要让分类中的方法和原有类中的方法名相同。避免出现这种情况的解决方案是给分类的方法名统一添加前缀。比如category_。
 >
 > 如果多个category中存在同名的方法，运行时到底调用哪个方法由编译器决定，最后一个参与编译的方法会被调用。
+>
+> 注意：category是在运行时加载的，不是在编译时。
+
+c .Extension的理解
+
+extension被开发者称之为扩展、延展、匿名分类。extension看起来很像一个匿名的category，但是extension和category几乎完全是两个东西。和category不同的是extension不但可以声明方法，还可以声明属性、成员变量。extension一般用于声明私有方法，私有属性，私有成员变量。Extension经常寄生于一个类的.m文件中。
+
+d.两者的差别
+
+- extension和category都可以添加属性，但是category的属性不能生成成员变量和getter、setter方法的实现
+- extension一般用来隐藏类的私有信息，你必须有一个类的源码才能为一个类添加extension，所以你无法为系统的类比如NSString添加extension，除非创建子类再添加extension。而category不需要有类的源码，我们可以给系统提供的类添加category
+- extension在编译期决议，它就是类的一部分，但是category则完全不一样，它是在运行期决议的。extension在编译期和头文件里的@interface以及实现文件里的@implement一起形成一个完整的类，它、extension伴随类的产生而产生，亦随之一起消亡
+
+### 20. NSDictionary 底层原理：Hash表、散列碰撞、负载因子、自动扩容、重Hash
+
+> NSDictionary（字典）是使用 hash表来实现key和value之间的映射和存储的， hash函数设计的好坏影响着数据的查找访问效率。数据在hash表中分布的越均匀，其访问效率越高。而在Objective-C中，通常都是利用NSString 来作为键值，其内部使用的hash函数也是通过使用 NSString对象作为键值来保证数据的各个节点在hash表中均匀分布。
+
+**哈希表（hash表）：又叫做散列表，是根据关键码值（key value）而直接访问的数据结构**。也就是说它通过关键码值映射到表中一个位置来访问记录，以加快查找的速度。这个映射叫做**函数**，存放记录的**数组**叫做**哈希表**。
+
+> 在oc中每一个对象创建时，都默认生成一个hashCode,也就是经过hash算法生成的一串数字，当利用key去取字典中的value时，若是使用遍历或者二分查找等方法，效率相对较低，于是出现了根据每一个key生成的hashCode将键值对放到hasCode对应的数组中的指定位置，这样当用key去取值时，便不必遍历去获取，既可以根据hashCode直接取出。因为hashCode的值过大，或许经过取余获取一个较小的数字，假如是对999进行取余运算，那么得到的结果始终处于0-999之间。但是，这样做的弊端在于取余所得到的值，可能是相同的，这样可能导致完全不相干的键值对被新的键值对（取余后值key相等）所覆盖，于是出现了数组中套链表实现的数组。这样，key值取余得到值相等的键值对，都将保存在同一个链表数组中，当查找key对应的值时，首先获取到该链表数组，然后遍历数组，取正确的key所对应的值即可。
+
+作为key值，必须遵循NSCopying协议，除了NSString对象之外，我们还可以使用其他类型对象来作为NSDictionary的 key值。不过这还不够，作为key值，该类型还必须继承于NSObject并且要重载一下两个方法：
+
+```
+- (NSUInteger)hash;  
+- (BOOL)isEqual:(id)object;  
+```
+
+其中，hash 方法是用来计算该对象的 hash 值，最终的 hash 值决定了该对象在 hash 表中存储的位置。所以同样，如果想重写该方法，我们尽量设计一个能让数据分布均匀的 hash 函数。
+
+**所以如果对象key的hash值相同，那在hash表里面的对应的value值是相同的**(value值被更新了)
+
+isEqual方法是为了通过hash值来找到对象在hash表中的位置。
+
+**简单总结：NSDictionary底层是一个Hash表，由key计算出hash值作为下标，value为键值对组成的链表，查找字典中的value时通过key计算出hash值取到相应的链表，然后遍历链表找到对应key的value。**
+
+参考：a. [NSDictionary底层实现原理](https://juejin.im/post/5b615c8de51d451989056a1b)
+
+​           b. [iOS底层原理：NSDictionary原理](https://www.jianshu.com/p/0d7cd6341f65)      
+
+
 
 ----
 
@@ -602,9 +718,21 @@ b. Category的理解
 
 待补充：
 
-2. NSDictionary 底层原理：Hash表、负载因子、扩容
 3. 响应链
 4. +load +initialize
 5. AutoReleasePool
 6. FMDB线程安全
+5. UITableView 卡顿的原因，如何优化
+6. NSTimer是否精准，有什么精准的替代方式
+7. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
+8. GCD原理，以及遇到的坑
+9. 快速排序
+10. 二叉树，给出两个子节点，快速找到最小父节点
+11. Runloop原理
+12. AutoReleasePool原理，是否看过源码
+13. FPS如何计算
+14. 循环引用、FaceBook第三方库的实现原理
+15. iOS 性能优化做了哪些常识
+16. Instrument
+17. 可能造成循环引用的场景
 
