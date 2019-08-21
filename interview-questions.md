@@ -1039,9 +1039,13 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 
 ### 30. GCD原理，以及遇到的坑
 
-GCD原理参考：[深入理解GCD](https://bestswifter.com/deep-gcd/)
+- 很多情况下问到GCD的坑其实就是指：
 
+​         在子线程能否刷新UI，会有什么问题？
 
+​         这个大家都知道，iOS中UI不是线程安全的，所以在子线程刷新UI有可能会导致Crash，需要调用主线程进行UI刷新。
+
+- GCD底层原理比较复杂，源码也比较多，可以参考：[深入理解GCD](https://bestswifter.com/deep-gcd/)
 
 ----
 
