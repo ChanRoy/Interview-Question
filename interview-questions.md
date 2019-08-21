@@ -904,9 +904,142 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 
 参考：[iOS 中的 block 是如何持有对象的](https://github.com/draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS%20中的%20block%20是如何持有对象的.md)
 
-### 29. GCD原理，以及遇到的坑
+### 29. GCD的使用
 
+- 任务：
 
+  任务是一个比较抽象的概念，可以简单的认为是一个操作、一个函数、一个方法等等，在实际的开发中大多是以block（block使用详见）的形式，使用起来也更加灵活。
+
+- 队列：
+
+  有两种队列：串行队列和并行队列。串行队列：同步执行，在当前线程执行；并行队列：可由多个线程异步执行，但任务的取出还是FIFO的
+
+- 队列的创建：
+
+  ```
+  // 参数1 队列名称
+  // 参数2 队列类型 DISPATCH_QUEUE_SERIAL/NULL串行队列，DISPATCH_QUEUE_CONCURRENT代表并行队列
+  // 下面代码为创建一个串行队列，也是实际开发中用的最多的
+  dispatch_queue_t serialQ = dispatch_queue_create("队列名", NULL);
+  ```
+
+- 系统提供两种队列：全局队列和主队列。
+
+  ```
+  /* 取得全局队列
+   第一个参数：线程优先级,设为默认即可，个人习惯写0，等同于默认
+   第二个参数：标记参数，目前没有用，一般传入0
+   */
+  serialQ = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+  ```
+
+  ```
+  // 获取主队列
+  serialQ = dispatch_get_main_queue();
+  ```
+
+- 执行方式：同步、异步
+
+  ```
+  /* 同步执行
+   第一个参数：执行任务的队列：串行、并行、全局、主队列
+   第二个参数：block任务
+   */
+  void dispatch_sync(dispatch_queue_t queue, dispatch_block_t block);
+  // 异步执行
+  void dispatch_async(dispatch_queue_t queue, dispatch_block_t block);
+  ```
+
+- dispatch_barrier
+
+  队列之前的block处理完成之后才开始处理队列中barrier的block，且barrier的block必须处理完之后，才能处理其它的block
+
+  ```
+  dispatch_barrier_sync(dispatch_queue_t queue, dispatch_block_t block);
+  dispatch_barrier_async(dispatch_queue_t queue, dispatch_block_t block);
+  ```
+
+- 几种组合：
+  - 串行队列，同步执行-----串行队列意味着顺序执行，同步执行意味着不开启线程（在当前线程执行）
+  - 串行队列,异步执行-----串行队列意味着任务顺序执行，异步执行说明要开线程, （如果开多个线程的话，不能保证串行队列顺序执行，所以只开一个线程）
+  - 并行队列,异步执行-----并行队列意味着执行顺序不确定，异步执行意味着会开启线程，而并行队列又允许不按顺序执行，所以系统为了提高性能会开启多个线程，来队列取任务（队列中任务取出仍然是顺序取出的，只是线程执行无序）。
+  - 并行队列,同步执行-----同步执行意味着不开线程,则肯定是顺序执行
+  - 死锁-----程序执行不出来(死锁) ；
+
+- 信号量：
+
+  >信号量就是一个资源计数器，对信号量有两个操作来达到互斥，分别是P和V操作。 一般情况是这样进行临界访问或互斥访问的： 设信号量值为1， 当一个进程1运行是，使用资源，进行P操作，即对信号量值减1，也就是资源数少了1个。这是信号量值为0。系统中规定当信号量值为0是，必须等待，直到信号量值不为零才能继续操作。 这时如果进程2想要运行，那么也必须进行P操作，但是此时信号量为0，所以无法减1，即不能P操作，也就阻塞。这样就到到了进程1排他访问。 当进程1运行结束后，释放资源，进行V操作。资源数重新加1，这是信号量的值变为1. 这时进程2发现资源数不为0，信号量能进行P操作了，立即执行P操作。信号量值又变为0.次数进程2咱有资源，排他访问资源。 这就是信号量来控制互斥的原理
+
+  **简单来讲 信号量为0则阻塞线程，大于0则不会阻塞。则我们通过改变信号量的值，来控制是否阻塞线程，从而达到线程同步。**
+
+  GCD信号量涉及到三个函数：
+
+  1. dispatch_semaphore_create **创建一个semaphore**
+  2. dispatch_semaphore_signal **发送一个信号**
+  3. dispatch_semaphore_wait **等待信号**
+
+  ```
+  // 创建队列组
+      dispatch_group_t group = dispatch_group_create();   
+  // 创建信号量，并且设置值为10
+      dispatch_semaphore_t semaphore = dispatch_semaphore_create(10);   
+      dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);   
+      for (int i = 0; i < 100; i++)   
+      {   // 由于是异步执行的，所以每次循环Block里面的dispatch_semaphore_signal根本还没有执行就会执行dispatch_semaphore_wait，从而semaphore-1.当循环10此后，semaphore等于0，则会阻塞线程，直到执行了Block的dispatch_semaphore_signal 才会继续执行
+          dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);   
+          dispatch_group_async(group, queue, ^{   
+              NSLog(@"%i",i);   
+              sleep(2);   
+  // 每次发送信号则semaphore会+1，
+              dispatch_semaphore_signal(semaphore);   
+          });   
+      }   
+  ```
+
+- 调度组：dispatch_group
+
+  - 任务的先后执行
+  - 监控多个任务完成之后，回到主线程更新UI，或者做其它事情
+
+  ```
+  - (void)groupTest {
+      // 创建一个组
+      dispatch_group_t group = dispatch_group_create();
+      NSLog(@"开始执行");
+      dispatch_async(dispatch_get_global_queue(0, 0), ^{
+          dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+              // 关联任务1
+              NSLog(@"task1 running in %@",[NSThread currentThread]);
+          });
+          dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+              // 关联任务2
+              NSLog(@"task2 running in %@",[NSThread currentThread]);
+          });
+          dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+              // 关联任务3
+              NSLog(@"task3 running in %@",[NSThread currentThread]);
+          });
+          dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+              // 关联任务4
+              // 等待1秒
+              [NSThread sleepForTimeInterval:1];
+              NSLog(@"task4 running in %@",[NSThread currentThread]);
+          });
+          dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+              // 回到主线程执行
+              NSLog(@"mainTask running in %@",[NSThread currentThread]);
+          });
+      });
+  }
+  ```
+
+参考：a. [iOS多线程实现——GCD使用详解](https://www.jianshu.com/p/33151a5bac28)
+
+​           b. [浅谈GCD中的信号量](https://www.jianshu.com/p/04ca5470f212)
+
+### 30. GCD原理，以及遇到的坑
+
+GCD原理参考：[深入理解GCD](https://bestswifter.com/deep-gcd/)
 
 
 
