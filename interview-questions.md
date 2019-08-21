@@ -904,6 +904,12 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 
 参考：[iOS 中的 block 是如何持有对象的](https://github.com/draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS%20中的%20block%20是如何持有对象的.md)
 
+### 29. GCD原理，以及遇到的坑
+
+
+
+
+
 ----
 
 
@@ -912,7 +918,7 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 
 2. UITableView 卡顿的原因，如何优化
 3. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
-4. GCD原理，以及遇到的坑
+4. Pod install & Pod update
 6. 二叉树，给出两个子节点，快速找到最小父节点
 10. iOS 性能优化做了哪些尝试
 11. Instrument
