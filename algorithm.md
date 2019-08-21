@@ -1,7 +1,19 @@
 # Interview-Question
 iOS 面试题积累 - 算法篇
 
-1. 递归计算1到100的和	
+### 索引
+
+1. [递归计算1到100的和]()
+
+2. [设计一个递归搜索制定目录下指定类型文件到函数，要求写清返回值、函数名、参数列表。*只写函数名，不用写函数内容。]()
+3. [n个数不相等，求其中的max、min，考虑比较次数，最优的比较次数是多少？]()
+4. [利用rand7（可以产生1-7的随机数），求rand13（要求是均等）]()
+5. [各类排序算法]()
+6. [二叉树]()
+
+-----
+
+### 1. 递归计算1到100的和
 
 ```swift
 func makeSum(_ num: NSInteger) -> NSInteger {
@@ -18,7 +30,7 @@ func makeSum(_ num: NSInteger) -> NSInteger {
 makeSum(100)
 ```
 
-2. 设计一个递归搜索制定目录下指定类型文件到函数，要求写清返回值、函数名、参数列表。*只写函数名，不用写函数内容。
+### 2. 设计一个递归搜索制定目录下指定类型文件到函数，要求写清返回值、函数名、参数列表。*只写函数名，不用写函数内容
 
 伪代码：
 
@@ -75,9 +87,7 @@ func findSomeFile(_ filePath: String) {
 }
 ```
 
-
-
-3. n个数不相等，求其中的max、min，考虑比较次数，最优的比较次数是多少？
+### 3. n个数不相等，求其中的max、min，考虑比较次数，最优的比较次数是多少？
 
 分治处理：
 
@@ -85,7 +95,7 @@ func findSomeFile(_ filePath: String) {
 
 参考： https://www.zhihu.com/question/28892158
 
-4. 利用rand7（可以产生1-7的随机数），求rand13（要求是均等）
+### 4. 利用rand7（可以产生1-7的随机数），求rand13（要求是均等）
 
 分析：
 
@@ -117,174 +127,174 @@ func rand13() -> NSInteger {
 }
 ```
 
-5. 各类排序算法：
+### 5. 各类排序算法
 
-   a. 选择排序（Selection Sort）
+a. 选择排序（Selection Sort）
 
-   ```objective-c
-   - (void)selectionSort:(NSArray <NSNumber *>*)arr {
-       
-       NSLog(@"%s",__func__);
-       NSMutableArray <NSNumber *>*mArr = arr.mutableCopy;
-       NSInteger count = mArr.count;
-       NSInteger minIndex = 0;
-       for (NSInteger i = 0; i < count - 1; i ++) {
-           
-           minIndex = i;
-           for (NSInteger j = i + 1; j < count; j ++) {
-               if (mArr[j].integerValue < mArr[minIndex].integerValue) {
-                   minIndex = j;
-               }
-           }
-           [mArr exchangeObjectAtIndex:i withObjectAtIndex:minIndex];
-       }
-       NSLog(@"%@",mArr.copy);
-   }
-   ```
-
-   b. 冒泡排序（Bubble Sort）
-
-   ```objective-c
-   - (void)bubbleSort:(NSArray <NSNumber *>*)arr {
-   
-       NSMutableArray <NSNumber *>*mArr = arr.mutableCopy;
-       NSInteger count = mArr.count;
-       for (NSInteger i = 0; i < count - 1; i ++) {
-   
-           for (NSInteger j = 0; j < count - i - 1; j ++) {
-   
-               if (mArr[j].integerValue > mArr[j + 1].integerValue) {
-   
-                   [mArr exchangeObjectAtIndex:j withObjectAtIndex:j + 1];
-               }
-           }
-       }
-       NSLog(@"%@",mArr.copy);
-   }
-   ```
-
-   c. 插入排序（Insertion Sort）
-
-   ```objective-c
-   - (void)insertionSort:(NSArray <NSNumber *>*)arr {
-       
-       NSMutableArray <NSNumber *>*mArr = arr.mutableCopy;
-       NSInteger count = mArr.count;
-       NSInteger preIndex = 0, current = 0;
-       for (NSInteger i = 1; i < count; i ++) {
-           
-           preIndex = i - 1;
-           current = mArr[i].integerValue;
-           while (preIndex >= 0 && mArr[preIndex].integerValue > current) {
-               
-               mArr[preIndex + 1] = mArr[preIndex];
-               preIndex --;
-           }
-           mArr[preIndex + 1] = @(current);
-       }
-       NSLog(@"%@",mArr.copy);
-   }
-   ```
-
-   d. 归并排序（Merge Sort）
-
-   ```objective-c
-   - (NSArray *)mergeSort:(NSArray *)arr {
-       
-       NSInteger count = arr.count;
-       if (count < 2) {
-           return arr;
-       }
-       NSInteger middle = floor(count / 2);
-       NSArray *left = [arr subarrayWithRange:NSMakeRange(0, middle)];
-       NSArray *right = [arr subarrayWithRange:NSMakeRange(middle, count - middle)];
-       NSArray *result = [self mergeWithLeft:[self mergeSort:left] right:[self mergeSort:right]];
-       
-       return result;
-   }
-   
-   - (NSArray *)mergeWithLeft:(NSArray <NSNumber *>*)leftArr right:(NSArray <NSNumber *>*)rightArr {
-       
-       NSMutableArray *result = @[].mutableCopy;
-       NSMutableArray <NSNumber *>*left = leftArr.mutableCopy;
-       NSMutableArray <NSNumber *>*right = rightArr.mutableCopy;
-       
-       while (left.count > 0 && right.count > 0) {
-           
-           if (left.firstObject.integerValue <= right.firstObject.integerValue) {
-               
-               [result addObject:left.firstObject];
-               [left removeObjectAtIndex:0];
-           }else {
-               
-               [result addObject:right.firstObject];
-               [right removeObjectAtIndex:0];
-           }
-       }
-       while (left.count) {
-           
-           [result addObject:left.firstObject];
-           [left removeObjectAtIndex:0];
-       }
-       while (right.count) {
-           
-           [result addObject:right.firstObject];
-           [right removeObjectAtIndex:0];
-       }
-       return result.copy;
-   }
-   ```
-
-   e. 快速排序（Quick Sort）
-
-   ```objective-c
-   - (NSArray *)quickSort:(NSMutableArray *)arr
-           leftIndex:(NSInteger)leftIndex
-          rightIndex:(NSInteger)rightIndex {
-       
-       if (leftIndex < rightIndex) {
-           
-           NSInteger temp = [self getMiddleIndex:arr leftIndex:leftIndex rightIndex:rightIndex];
-           [self quickSort:arr leftIndex:leftIndex rightIndex:temp - 1];
-           [self quickSort:arr leftIndex:temp + 1 rightIndex:rightIndex];
-       }
-       return arr.copy;
-   }
-   
-   - (NSInteger)getMiddleIndex:(NSMutableArray *)arr
-                     leftIndex:(NSInteger)left
-                    rightIndex:(NSInteger)right {
-       
-       NSInteger tempValue = [arr[left] integerValue];
-       while (left < right) {
-           // 首先从右边开始查找比基准数小的值
-           while (left < right && tempValue <= [arr[right] integerValue]) {
-               // 如果比基准数大，继续查找
-               right --;
-           }
-           if (left < right) {
-               // 如果比基准数小，则将查找到的小值调换到i的位置
-               arr[left] = arr[right];
-           }
-           // 当在右边查找到一个比基准数小的值时，就从i开始往后找比基准数大的值
-           while (left < right && [arr[left] integerValue] <= tempValue) {
-               // 如果比基准数小，继续查找
-               left ++;
-           }
-           if (left < right) {
-               // 如果比基准数大，则将查找到的大值调换到j的位置
-               arr[right] = arr[left];
+```objective-c
+- (void)selectionSort:(NSArray <NSNumber *>*)arr {
+    
+    NSLog(@"%s",__func__);
+    NSMutableArray <NSNumber *>*mArr = arr.mutableCopy;
+    NSInteger count = mArr.count;
+    NSInteger minIndex = 0;
+    for (NSInteger i = 0; i < count - 1; i ++) {
+        
+        minIndex = i;
+        for (NSInteger j = i + 1; j < count; j ++) {
+            if (mArr[j].integerValue < mArr[minIndex].integerValue) {
+                minIndex = j;
+            }
         }
-       }
-       // 将基准数放到正确位置
-       arr[left] = @(tempValue);
-       return left;
-   }
-   ```
+        [mArr exchangeObjectAtIndex:i withObjectAtIndex:minIndex];
+    }
+    NSLog(@"%@",mArr.copy);
+}
+```
 
-6. 二叉树
+b. 冒泡排序（Bubble Sort）
 
-   
+```objective-c
+- (void)bubbleSort:(NSArray <NSNumber *>*)arr {
+
+    NSMutableArray <NSNumber *>*mArr = arr.mutableCopy;
+    NSInteger count = mArr.count;
+    for (NSInteger i = 0; i < count - 1; i ++) {
+
+        for (NSInteger j = 0; j < count - i - 1; j ++) {
+
+            if (mArr[j].integerValue > mArr[j + 1].integerValue) {
+
+                [mArr exchangeObjectAtIndex:j withObjectAtIndex:j + 1];
+            }
+        }
+    }
+    NSLog(@"%@",mArr.copy);
+}
+```
+
+c. 插入排序（Insertion Sort）
+
+```objective-c
+- (void)insertionSort:(NSArray <NSNumber *>*)arr {
+    
+    NSMutableArray <NSNumber *>*mArr = arr.mutableCopy;
+    NSInteger count = mArr.count;
+    NSInteger preIndex = 0, current = 0;
+    for (NSInteger i = 1; i < count; i ++) {
+        
+        preIndex = i - 1;
+        current = mArr[i].integerValue;
+        while (preIndex >= 0 && mArr[preIndex].integerValue > current) {
+            
+            mArr[preIndex + 1] = mArr[preIndex];
+            preIndex --;
+        }
+        mArr[preIndex + 1] = @(current);
+    }
+    NSLog(@"%@",mArr.copy);
+}
+```
+
+d. 归并排序（Merge Sort）
+
+```objective-c
+- (NSArray *)mergeSort:(NSArray *)arr {
+    
+    NSInteger count = arr.count;
+    if (count < 2) {
+        return arr;
+    }
+    NSInteger middle = floor(count / 2);
+    NSArray *left = [arr subarrayWithRange:NSMakeRange(0, middle)];
+    NSArray *right = [arr subarrayWithRange:NSMakeRange(middle, count - middle)];
+    NSArray *result = [self mergeWithLeft:[self mergeSort:left] right:[self mergeSort:right]];
+    
+    return result;
+}
+
+- (NSArray *)mergeWithLeft:(NSArray <NSNumber *>*)leftArr right:(NSArray <NSNumber *>*)rightArr {
+    
+    NSMutableArray *result = @[].mutableCopy;
+    NSMutableArray <NSNumber *>*left = leftArr.mutableCopy;
+    NSMutableArray <NSNumber *>*right = rightArr.mutableCopy;
+    
+    while (left.count > 0 && right.count > 0) {
+        
+        if (left.firstObject.integerValue <= right.firstObject.integerValue) {
+            
+            [result addObject:left.firstObject];
+            [left removeObjectAtIndex:0];
+        }else {
+            
+            [result addObject:right.firstObject];
+            [right removeObjectAtIndex:0];
+        }
+    }
+    while (left.count) {
+        
+        [result addObject:left.firstObject];
+        [left removeObjectAtIndex:0];
+    }
+    while (right.count) {
+        
+        [result addObject:right.firstObject];
+        [right removeObjectAtIndex:0];
+    }
+    return result.copy;
+}
+```
+
+e. 快速排序（Quick Sort）
+
+```objective-c
+- (NSArray *)quickSort:(NSMutableArray *)arr
+        leftIndex:(NSInteger)leftIndex
+       rightIndex:(NSInteger)rightIndex {
+    
+    if (leftIndex < rightIndex) {
+        
+        NSInteger temp = [self getMiddleIndex:arr leftIndex:leftIndex rightIndex:rightIndex];
+        [self quickSort:arr leftIndex:leftIndex rightIndex:temp - 1];
+        [self quickSort:arr leftIndex:temp + 1 rightIndex:rightIndex];
+    }
+    return arr.copy;
+}
+
+- (NSInteger)getMiddleIndex:(NSMutableArray *)arr
+                  leftIndex:(NSInteger)left
+                 rightIndex:(NSInteger)right {
+    
+    NSInteger tempValue = [arr[left] integerValue];
+    while (left < right) {
+        // 首先从右边开始查找比基准数小的值
+        while (left < right && tempValue <= [arr[right] integerValue]) {
+            // 如果比基准数大，继续查找
+            right --;
+        }
+        if (left < right) {
+            // 如果比基准数小，则将查找到的小值调换到i的位置
+            arr[left] = arr[right];
+        }
+        // 当在右边查找到一个比基准数小的值时，就从i开始往后找比基准数大的值
+        while (left < right && [arr[left] integerValue] <= tempValue) {
+            // 如果比基准数小，继续查找
+            left ++;
+        }
+        if (left < right) {
+            // 如果比基准数大，则将查找到的大值调换到j的位置
+            arr[right] = arr[left];
+     }
+    }
+    // 将基准数放到正确位置
+    arr[left] = @(tempValue);
+    return left;
+}
+```
+
+### 6. 二叉树
+
+ 
 
 
 

@@ -4,27 +4,34 @@ iOS 面试题积累 - iOS 篇
 
 ### 索引
 
-1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./README.md#1-calayer-中anchorpoint--positionuiview的-transform-cgaffinetransform-概念)
-2. [贝塞尔曲线](./README.md#2-贝塞尔曲线)
-3. [Block 中引用成员变量需要先判断self是否为nil](./README.md#3-block-中引用成员变量需要先判断self是否为nil)
-4. [Weak关键字：属性所指的对象遭到摧毁时，属性值也会清空(nil out)。runtime实现weak关键字原理：hash 表](./README.md#4-weak关键字属性所指的对象遭到摧毁时属性值也会清空nil-outruntime实现weak关键字原理hash-表)
-5. [NSProxy：涉及相关概念：消息转发](./README.md#5-nsproxy涉及相关概念消息转发)
-6. [@synthesize和@dynamic分别有什么作用？](./README.md#6-synthesize和dynamic分别有什么作用)
-7. [NSTimer 的释放问题：可以采用block、NSProxy打破](./README.md#7-nstimer-的释放问题可以采用blocknsproxy打破)
-8. [self & super](./README.md#8-self--super)
-9. [OC中对象的内存销毁时间表](./README.md#9-oc中对象的内存销毁时间表)
-10. [消息转发（Message Forwarding）](./README.md#9-oc中对象的内存销毁时间表)
-11. [OC内存管理：retainCount](./README.md#11-oc内存管理retaincount)
-12. [iOS线程、同步异步、串行并行队列](./README.md#12-ios线程同步异步串行并行队列)
-13. [KVC Collection Operators(集合操作符)](./README.md#13-kvc-collection-operators集合操作符)
-14. [CADisplayLink](./README.md#14-cadisplaylink)
-15. [Runloop](./README.md#15-runloop)
-16. [关联对象（associatedObject）](./README.md#16-关联对象associatedobject)
-17. [iOS各种锁](./README.md#17-ios各种锁)
-18. [响应链](./README.md#17-ios各种锁)
-19. [Category & Extension](./README.md#19-category--extension)
-
-20. [NSDictionary 底层原理：Hash表、散列碰撞、负载因子、自动扩容、重Hash](./README.md#20-nsdictionary-底层原理hash表散列碰撞负载因子自动扩容重hash)
+1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./interview-questions.md#1-calayer-中anchorpoint--positionuiview的-transform-cgaffinetransform-概念)
+2. [贝塞尔曲线](./interview-questions.md#2-贝塞尔曲线)
+3. [Block 中引用成员变量需要先判断self是否为nil](./interview-questions.md#3-block-中引用成员变量需要先判断self是否为nil)
+4. [Weak关键字：属性所指的对象遭到摧毁时，属性值也会清空(nil out)。runtime实现weak关键字原理：hash 表](./interview-questions.md#4-weak关键字属性所指的对象遭到摧毁时属性值也会清空nil-outruntime实现weak关键字原理hash-表)
+5. [NSProxy：涉及相关概念：消息转发](./interview-questions.md#5-nsproxy涉及相关概念消息转发)
+6. [@synthesize和@dynamic分别有什么作用？](./interview-questions.md#6-synthesize和dynamic分别有什么作用)
+7. [NSTimer 的释放问题：可以采用block、NSProxy打破](./interview-questions.md#7-nstimer-的释放问题可以采用blocknsproxy打破)
+8. [self & super](./interview-questions.md#8-self--super)
+9. [OC中对象的内存销毁时间表](./interview-questions.md#9-oc中对象的内存销毁时间表)
+10. [消息转发（Message Forwarding）](./interview-questions.md#9-oc中对象的内存销毁时间表)
+11. [OC内存管理：retainCount](./interview-questions.md#11-oc内存管理retaincount)
+12. [iOS线程、同步异步、串行并行队列](./interview-questions.md#12-ios线程同步异步串行并行队列)
+13. [KVC Collection Operators(集合操作符)](./interview-questions.md#13-kvc-collection-operators集合操作符)
+14. [CADisplayLink](./interview-questions.md#14-cadisplaylink)
+15. [Runloop](./interview-questions.md#15-runloop)
+16. [关联对象（associatedObject）](./interview-questions.md#16-关联对象associatedobject)
+17. [iOS各种锁](./interview-questions.md#17-ios各种锁)
+18. [响应链](./interview-questions.md#17-ios各种锁)
+19. [Category & Extension](./interview-questions.md#19-category--extension)
+20. [NSDictionary 底层原理：Hash表、散列碰撞、负载因子、自动扩容、重Hash](./interview-questions.md#20-nsdictionary-底层原理hash表散列碰撞负载因子自动扩容重hash)
+21. [+load & +initialize](./interview-questions.md#21-load--initialize)
+22. [自动释放池（AutoReleasePool）](./interview-questions.md#22-自动释放池autoreleasepool)
+23. [FMDB是线程安全的吗？](./interview-questions.md#23-fmdb是线程安全的吗)
+24. [FPS如何计算](./interview-questions.md#24-fps如何计算)
+25. [NSDateFormatter 性能问题](./interview-questions.md#25-nsdateformatter-性能问题)
+26. [沙盒结构](./interview-questions.md#26-沙盒结构)
+27. [循环引用、FaceBook第三方库FBRetainCycleDetector的实现原理](./interview-questions.md#27-循环引用facebook第三方库fbretaincycledetector的实现原理)
+28. [Block原理](./interview-questions.md#28-block原理)
 
 --------
 
@@ -895,7 +902,7 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 - 在 ARC 中，捕获外部了变量的 block 的类会是 `__NSMallocBlock__` 或者 `__NSStackBlock__`，如果 block 被赋值给了某个变量在这个过程中会执行 `_Block_copy` 将原有的 `__NSStackBlock__` 变成 `__NSMallocBlock__`；但是如果 block 没有被赋值给某个变量，那它的类型就是 `__NSStackBlock__`；没有捕获外部变量的 block 的类会是 `__NSGlobalBlock__` 即不在堆上，也不在栈上，它类似 C 语言函数一样会在代码段中。
 - 在非 ARC 中，捕获了外部变量的 block 的类会是 `__NSStackBlock__`，放置在栈上，没有捕获外部变量的 block 时与 ARC 环境下情况相同。
 
-参考：[**iOS 中的 block 是如何持有对象的**]([https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS%20%E4%B8%AD%E7%9A%84%20block%20%E6%98%AF%E5%A6%82%E4%BD%95%E6%8C%81%E6%9C%89%E5%AF%B9%E8%B1%A1%E7%9A%84.md](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md))
+参考：[**iOS 中的 block 是如何持有对象的**](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md)
 
 
 
@@ -909,7 +916,6 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 3. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
 4. GCD原理，以及遇到的坑
 6. 二叉树，给出两个子节点，快速找到最小父节点
-9. 循环引用、FaceBook第三方库的实现原理
 10. iOS 性能优化做了哪些尝试
 11. Instrument
 12. 可能造成循环引用的场景
