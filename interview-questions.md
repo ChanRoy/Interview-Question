@@ -846,9 +846,9 @@ isEqual方法是为了通过hash值来找到对象在hash表中的位置。
 
 - FBRetainCycleDetector
 
-参考：a. [**iOS 中的 block 是如何持有对象的**]([https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS%20%E4%B8%AD%E7%9A%84%20block%20%E6%98%AF%E5%A6%82%E4%BD%95%E6%8C%81%E6%9C%89%E5%AF%B9%E8%B1%A1%E7%9A%84.md](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md))
+参考：a. [iOS 中的 block 是如何持有对象的](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md)
 
-​           b. [如何在 iOS 中解决循环引用的问题]([https://github.com/draveness/analyze/blob/master/contents/FBRetainCycleDetector/%E5%A6%82%E4%BD%95%E5%9C%A8%20iOS%20%E4%B8%AD%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98.md](https://github.com/draveness/analyze/blob/master/contents/FBRetainCycleDetector/如何在 iOS 中解决循环引用的问题.md))
+​           b. [如何在 iOS 中解决循环引用的问题](https://github.com/draveness/analyze/blob/master/contents/FBRetainCycleDetector/如何在 iOS 中解决循环引用的问题.md)
 
 ### 28. Block原理
 
@@ -902,7 +902,7 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 - 在 ARC 中，捕获外部了变量的 block 的类会是 `__NSMallocBlock__` 或者 `__NSStackBlock__`，如果 block 被赋值给了某个变量在这个过程中会执行 `_Block_copy` 将原有的 `__NSStackBlock__` 变成 `__NSMallocBlock__`；但是如果 block 没有被赋值给某个变量，那它的类型就是 `__NSStackBlock__`；没有捕获外部变量的 block 的类会是 `__NSGlobalBlock__` 即不在堆上，也不在栈上，它类似 C 语言函数一样会在代码段中。
 - 在非 ARC 中，捕获了外部变量的 block 的类会是 `__NSStackBlock__`，放置在栈上，没有捕获外部变量的 block 时与 ARC 环境下情况相同。
 
-参考：[**iOS 中的 block 是如何持有对象的**](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md)
+参考：[iOS 中的 block 是如何持有对象的](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md)
 
 
 
