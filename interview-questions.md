@@ -848,7 +848,7 @@ isEqual方法是为了通过hash值来找到对象在hash表中的位置。
 
 参考：a. [iOS 中的 block 是如何持有对象的](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md)
 
-​           b. [如何在 iOS 中解决循环引用的问题](https://github.com/draveness/analyze/blob/master/contents/FBRetainCycleDetector/如何在 iOS 中解决循环引用的问题.md)
+​            b. [如何在 iOS 中解决循环引用的问题](https://github.com/draveness/analyze/blob/master/contents/FBRetainCycleDetector/如何在 iOS 中解决循环引用的问题.md)
 
 ### 28. Block原理
 
@@ -903,8 +903,6 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 - 在非 ARC 中，捕获了外部变量的 block 的类会是 `__NSStackBlock__`，放置在栈上，没有捕获外部变量的 block 时与 ARC 环境下情况相同。
 
 参考：[iOS 中的 block 是如何持有对象的](https://github.com/Draveness/analyze/blob/master/contents/FBRetainCycleDetector/iOS 中的 block 是如何持有对象的.md)
-
-
 
 ----
 
