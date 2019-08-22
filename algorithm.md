@@ -294,7 +294,320 @@ e. 快速排序（Quick Sort）
 
 ### 6. 二叉树
 
- 
+BinaryTreeNode.h 文件：
+
+```
+@interface BinaryTreeNode : NSObject
+
+@property (nonatomic, assign) NSInteger value;
+
+@property (nonatomic, strong) BinaryTreeNode *leftNode;
+
+@property (nonatomic, strong) BinaryTreeNode *rightNode;
+
+@end
+```
+
+BinaryTreeNode.m 文件：
+
+```
+// 创建二叉排序树
++ (BinaryTreeNode *)createTreeWithValues:(NSArray <NSNumber *>*)values {
+    
+    BinaryTreeNode *root = nil;
+    for (NSInteger i = 0; i < values.count; i ++) {
+        
+        NSInteger value = values[i].integerValue;
+        root = [self addTreeNode:root value:value];
+    }
+    return root;
+}
+
+// 添加节点
++ (BinaryTreeNode *)addTreeNode:(BinaryTreeNode *)treeNode value:(NSInteger)value {
+    
+    if (!treeNode) {
+        
+        treeNode = [BinaryTreeNode new];
+        treeNode.value = value;
+    }else if (value < treeNode.value) {
+        
+        treeNode.leftNode = [self addTreeNode:treeNode.leftNode value:value];
+    }else {
+        
+        treeNode.rightNode = [self addTreeNode:treeNode.rightNode value:value];
+    }
+    return treeNode;
+}
+
+// 翻转 - 递归
++ (BinaryTreeNode *)invertBinaryTree:(BinaryTreeNode *)rootNode {
+    
+    if (!rootNode) {
+        return nil;
+    }
+    if (!rootNode.leftNode && rootNode.rightNode) {
+        
+        return rootNode;
+    }
+    [BinaryTreeNode invertBinaryTree:rootNode.leftNode];
+    [BinaryTreeNode invertBinaryTree:rootNode.rightNode];
+    BinaryTreeNode *tempNode = rootNode.leftNode;
+    rootNode.leftNode = rootNode.rightNode;
+    rootNode.rightNode = tempNode;
+    
+    return rootNode;
+}
+
+// 翻转 - 非递归
++ (BinaryTreeNode *)invertBinaryTreeNot:(BinaryTreeNode *)rootNode {
+    
+    if (!rootNode) {
+        return nil;
+    }
+    if (!rootNode.leftNode && !rootNode.rightNode) {
+        return rootNode;
+    }
+    NSMutableArray *queueArray = [NSMutableArray new];
+    [queueArray addObject:rootNode];
+    while (queueArray.count > 0) {
+        
+        BinaryTreeNode *node = queueArray.firstObject;
+        [queueArray removeObjectAtIndex:0];
+        
+        BinaryTreeNode *pLeft = node.leftNode;
+        node.leftNode = node.rightNode;
+        node.rightNode = pLeft;
+        if (node.leftNode) {
+            [queueArray addObject:node.leftNode];
+        }
+        if (node.rightNode) {
+            [queueArray addObject:node.rightNode];
+        }
+    }
+    return rootNode;
+}
+
+
+/**
+ *  二叉树中某个位置的节点（按层次遍历）
+ */
++ (BinaryTreeNode *)treeNodeAtIndex:(NSInteger)index inTree:(BinaryTreeNode *)rootNode {
+    
+    if (!rootNode || index < 0) {
+        return nil;
+    }
+    // 数组当成队列
+    NSMutableArray *queueArray = [NSMutableArray new];
+    // 压入根节点
+    [queueArray addObject:rootNode];
+    while (queueArray.count > 0) {
+        BinaryTreeNode *node = [queueArray firstObject];
+        if (index == 0) {
+            return node;
+        }
+        [queueArray removeObjectAtIndex:0];
+        // 移除节点，index减少
+        index --;
+        if (node.leftNode) {
+            [queueArray addObject:node.leftNode];
+        }
+        if (node.rightNode) {
+            [queueArray addObject:node.rightNode];
+        }
+    }
+    // 遍历完没有找到位置，返回nil
+    return nil;
+}
+
+/**
+ *  先序遍历：先访问根，再遍历左子树，再遍历右子树。典型的递归思想
+ */
++ (void)preOrderTraverseTree:(BinaryTreeNode *)rootNode handler:(void(^)(BinaryTreeNode *treeNode))handler {
+    
+    if (rootNode) {
+        
+        if (handler) {
+            handler(rootNode);
+        }
+        [BinaryTreeNode preOrderTraverseTree:rootNode.leftNode handler:handler];
+        [BinaryTreeNode preOrderTraverseTree:rootNode.rightNode handler:handler];
+    }
+}
+
+/**
+ *  中序遍历：先遍历左子树，再访问根，再遍历右子树
+ */
++ (void)inOrderTraverseTree:(BinaryTreeNode *)rootNode handler:(void(^)(BinaryTreeNode *rootNOde))handler {
+    
+    if (rootNode) {
+        
+        [BinaryTreeNode inOrderTraverseTree:rootNode.leftNode handler:handler];
+        if (handler) {
+            handler(rootNode);
+        }
+        [BinaryTreeNode inOrderTraverseTree:rootNode.rightNode handler:handler];
+    }
+}
+
+/**
+ *  后序遍历：先遍历左子树，再遍历右子树，再访问根
+ */
++ (void)postOrderTraverseTree:(BinaryTreeNode *)rootNode handler:(void(^)(BinaryTreeNode *node))handler {
+    
+    if (rootNode) {
+        
+        [BinaryTreeNode postOrderTraverseTree:rootNode.leftNode handler:handler];
+        [BinaryTreeNode postOrderTraverseTree:rootNode.rightNode handler:handler];
+        if (handler) {
+            handler(rootNode);
+        }
+    }
+}
+
+/**
+ *  层次遍历（广度优先）
+ */
++ (void)levelTraverseTree:(BinaryTreeNode *)rootNode handler:(void(^)(BinaryTreeNode *node))handler {
+    
+    if (!rootNode) {
+        return;
+    }
+    NSMutableArray *queueArray = [NSMutableArray new]; // 数组当成队列
+    [queueArray addObject:rootNode];
+    while (queueArray.count > 0) {
+        BinaryTreeNode *node = [queueArray firstObject];
+        if (handler) {
+            handler(node);
+        }
+        [queueArray removeObjectAtIndex:0]; // 弹出最前面的点
+        if (node.leftNode) {
+            [queueArray addObject:node.leftNode];
+        }
+        if (node.rightNode) {
+            [queueArray addObject:node.rightNode];
+        }
+    }
+}
+
+/**
+ *  二叉树的深度
+ */
++ (NSInteger)depthOfTree:(BinaryTreeNode *)rootNode {
+    
+    if (!rootNode) {
+        return 0;
+    }
+    if (!rootNode.leftNode && !rootNode.rightNode) {
+        return 1;
+    }
+    NSInteger leftDepth = [BinaryTreeNode depthOfTree:rootNode.leftNode];
+    NSInteger rightDepth = [BinaryTreeNode depthOfTree:rootNode.rightNode];
+    
+    return MAX(leftDepth, rightDepth) + 1;
+}
+
+/**
+ *  二叉树的宽度
+ */
++ (NSInteger)widthOfTree:(BinaryTreeNode *)rootNode {
+    
+    if (!rootNode) {
+        return 0;
+    }
+    NSMutableArray *queueArray = [NSMutableArray new];
+    [queueArray addObject:rootNode];
+    NSInteger maxWidth = 1; // 最大的宽度，初始化为1，因为已有根节点
+    NSInteger curWidth = 0; // 当前层的宽度
+    
+    while (queueArray.count > 0) {
+        
+        curWidth = queueArray.count;
+        // 依次弹出当前层的节点
+        for (NSInteger i = 0; i < curWidth; i ++) {
+            
+            BinaryTreeNode *node = [queueArray firstObject];
+            [queueArray removeObjectAtIndex:0];
+            if (node.leftNode) {
+                [queueArray addObject:node.leftNode];
+            }
+            if (node.rightNode) {
+                [queueArray addObject:node.rightNode];
+            }
+        }
+        maxWidth = MAX(maxWidth, queueArray.count);
+    }
+    return maxWidth;
+}
+
+/**
+ *  二叉树的所有节点数
+ */
++ (NSInteger)numberOfNodesInTree:(BinaryTreeNode *)rootNode {
+    
+    if (!rootNode) {
+        return 0;
+    }
+    NSInteger leftCount = [BinaryTreeNode numberOfNodesInTree:rootNode.leftNode];
+    NSInteger rightCount = [BinaryTreeNode numberOfNodesInTree:rootNode.rightNode];
+    
+    return leftCount + rightCount + 1;
+}
+
+/**
+ *  二叉树某层中的节点数
+ */
++ (NSInteger)numberOfNodesOnLevel:(NSInteger)level inTree:(BinaryTreeNode *)rootNode {
+    
+    if (!rootNode || level < 1) {
+        return 0;
+    }
+    if (level == 1) {
+        return 1;
+    }
+    // 递归：level层节点数 = 左子树level-1层节点数+右子树level-1层节点数
+    NSInteger leftCount = [BinaryTreeNode numberOfNodesOnLevel:level-1 inTree:rootNode.leftNode];
+    NSInteger rightCount = [BinaryTreeNode numberOfNodesOnLevel:level-1 inTree:rootNode.rightNode];
+    return  leftCount + rightCount;
+}
+
+/**
+ *  二叉树叶子节点数
+ */
++ (NSInteger)numberOfLeafsInTree:(BinaryTreeNode *)rootNode {
+    if (!rootNode) {
+        return 0;
+    }
+    // 左子树和右子树都是空，说明是叶子节点
+    if (!rootNode.leftNode && !rootNode.rightNode) {
+        return 1;
+    }
+    return [BinaryTreeNode numberOfLeafsInTree:rootNode.leftNode] + [BinaryTreeNode numberOfLeafsInTree:rootNode.rightNode];
+}
+
+/**
+ *  二叉树的最大距离（直径）
+ */
++ (NSInteger)maxDistanceOfTree:(BinaryTreeNode *)rootNode {
+    if (!rootNode) {
+        return 0;
+    }
+    //  方案一：（递归次数较多，效率较低）
+    // 分3种情况：
+    //1、最远距离经过根节点：距离 = 左子树深度 + 右子树深度
+    NSInteger distance = [BinaryTreeNode depthOfTree:rootNode.leftNode] + [BinaryTreeNode depthOfTree:rootNode.rightNode];
+    //2、最远距离在根节点左子树上，即计算左子树最远距离
+    NSInteger disLeft = [BinaryTreeNode maxDistanceOfTree:rootNode.leftNode];
+    //3、最远距离在根节点右子树上，即计算右子树最远距离
+    NSInteger disRight = [BinaryTreeNode maxDistanceOfTree:rootNode.rightNode];
+    
+    return MAX(MAX(disLeft, disRight), distance);
+}
+```
+
+参考：[二叉树的各种问题]( https://www.jianshu.com/p/a270d117e116)
+
+
 
 
 
