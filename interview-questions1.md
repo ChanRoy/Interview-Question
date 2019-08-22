@@ -1,37 +1,39 @@
 # Interview-Question
 
-iOS 面试题积累 - iOS 篇
+iOS 面试题积累 - iOS 篇1
 
 ### 索引
 
-1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./interview-questions.md#1-calayer-中anchorpoint--positionuiview的-transform-cgaffinetransform-概念)
-2. [贝塞尔曲线](./interview-questions.md#2-贝塞尔曲线)
-3. [Block 中引用成员变量需要先判断self是否为nil](./interview-questions.md#3-block-中引用成员变量需要先判断self是否为nil)
-4. [Weak关键字：属性所指的对象遭到摧毁时，属性值也会清空(nil out)。runtime实现weak关键字原理：hash 表](./interview-questions.md#4-weak关键字属性所指的对象遭到摧毁时属性值也会清空nil-outruntime实现weak关键字原理hash-表)
-5. [NSProxy：涉及相关概念：消息转发](./interview-questions.md#5-nsproxy涉及相关概念消息转发)
-6. [@synthesize和@dynamic分别有什么作用？](./interview-questions.md#6-synthesize和dynamic分别有什么作用)
-7. [NSTimer 的释放问题：可以采用block、NSProxy打破](./interview-questions.md#7-nstimer-的释放问题可以采用blocknsproxy打破)
-8. [self & super](./interview-questions.md#8-self--super)
-9. [OC中对象的内存销毁时间表](./interview-questions.md#9-oc中对象的内存销毁时间表)
-10. [消息转发（Message Forwarding）](./interview-questions.md#9-oc中对象的内存销毁时间表)
-11. [OC内存管理：retainCount](./interview-questions.md#11-oc内存管理retaincount)
-12. [iOS线程、同步异步、串行并行队列](./interview-questions.md#12-ios线程同步异步串行并行队列)
-13. [KVC Collection Operators(集合操作符)](./interview-questions.md#13-kvc-collection-operators集合操作符)
-14. [CADisplayLink](./interview-questions.md#14-cadisplaylink)
-15. [Runloop](./interview-questions.md#15-runloop)
-16. [关联对象（associatedObject）](./interview-questions.md#16-关联对象associatedobject)
-17. [iOS各种锁](./interview-questions.md#17-ios各种锁)
-18. [响应链](./interview-questions.md#17-ios各种锁)
-19. [Category & Extension](./interview-questions.md#19-category--extension)
-20. [NSDictionary 底层原理：Hash表、散列碰撞、负载因子、自动扩容、重Hash](./interview-questions.md#20-nsdictionary-底层原理hash表散列碰撞负载因子自动扩容重hash)
-21. [+load & +initialize](./interview-questions.md#21-load--initialize)
-22. [自动释放池（AutoReleasePool）](./interview-questions.md#22-自动释放池autoreleasepool)
-23. [FMDB是线程安全的吗？](./interview-questions.md#23-fmdb是线程安全的吗)
-24. [FPS如何计算](./interview-questions.md#24-fps如何计算)
-25. [NSDateFormatter 性能问题](./interview-questions.md#25-nsdateformatter-性能问题)
-26. [沙盒结构](./interview-questions.md#26-沙盒结构)
-27. [循环引用、FaceBook第三方库FBRetainCycleDetector的实现原理](./interview-questions.md#27-循环引用facebook第三方库fbretaincycledetector的实现原理)
-28. [Block原理](./interview-questions.md#28-block原理)
+1. [CALayer 中`anchorPoint` ` position`，UIView的 `transform` `CGAffineTransform` 概念](./interview-questions1.md#1-calayer-中anchorpoint--positionuiview的-transform-cgaffinetransform-概念)
+2. [贝塞尔曲线](./interview-questions1.md#2-贝塞尔曲线)
+3. [Block 中引用成员变量需要先判断self是否为nil](./interview-questions1.md#3-block-中引用成员变量需要先判断self是否为nil)
+4. [Weak关键字：属性所指的对象遭到摧毁时，属性值也会清空(nil out)。runtime实现weak关键字原理：hash 表](./interview-questions1.md#4-weak关键字属性所指的对象遭到摧毁时属性值也会清空nil-outruntime实现weak关键字原理hash-表)
+5. [NSProxy：涉及相关概念：消息转发](./interview-questions1.md#5-nsproxy涉及相关概念消息转发)
+6. [@synthesize和@dynamic分别有什么作用？](./interview-questions1.md#6-synthesize和dynamic分别有什么作用)
+7. [NSTimer 的释放问题：可以采用block、NSProxy打破](./interview-questions1.md#7-nstimer-的释放问题可以采用blocknsproxy打破)
+8. [self & super](./interview-questions1.md#8-self--super)
+9. [OC中对象的内存销毁时间表](./interview-questions1.md#9-oc中对象的内存销毁时间表)
+10. [消息转发（Message Forwarding）](./interview-questions1.md#9-oc中对象的内存销毁时间表)
+11. [OC内存管理：retainCount](./interview-questions1.md#11-oc内存管理retaincount)
+12. [iOS线程、同步异步、串行并行队列](./interview-questions1.md#12-ios线程同步异步串行并行队列)
+13. [KVC Collection Operators(集合操作符)](./interview-questions1.md#13-kvc-collection-operators集合操作符)
+14. [CADisplayLink](./interview-questions1.md#14-cadisplaylink)
+15. [Runloop](./interview-questions1.md#15-runloop)
+16. [关联对象（associatedObject）](./interview-questions1.md#16-关联对象associatedobject)
+17. [iOS各种锁](./interview-questions1.md#17-ios各种锁)
+18. [响应链](./interview-questions1.md#17-ios各种锁)
+19. [Category & Extension](./interview-questions1.md#19-category--extension)
+20. [NSDictionary 底层原理：Hash表、散列碰撞、负载因子、自动扩容、重Hash](./interview-questions1.md#20-nsdictionary-底层原理hash表散列碰撞负载因子自动扩容重hash)
+21. [+load & +initialize](./interview-questions1.md#21-load--initialize)
+22. [自动释放池（AutoReleasePool）](./interview-questions1.md#22-自动释放池autoreleasepool)
+23. [FMDB是线程安全的吗？](./interview-questions1.md#23-fmdb是线程安全的吗)
+24. [FPS如何计算](./interview-questions1.md#24-fps如何计算)
+25. [NSDateFormatter 性能问题](./interview-questions1.md#25-nsdateformatter-性能问题)
+26. [沙盒结构](./interview-questions1.md#26-沙盒结构)
+27. [循环引用、FaceBook第三方库FBRetainCycleDetector的实现原理](./interview-questions1.md#27-循环引用facebook第三方库fbretaincycledetector的实现原理)
+28. [Block原理](./interview-questions1.md#28-block原理)
+29. [GCD的使用](./interview-questions1.md#29-gcd的使用)
+30. [GCD原理，以及遇到的坑](./interview-questions1.md#30-gcd原理以及遇到的坑)
 
 --------
 
@@ -1049,15 +1051,5 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 
 ----
 
-
-
-待补充：
-
-2. UITableView 卡顿的原因，如何优化
-3. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
-4. Pod install & Pod update
-6. 二叉树，给出两个子节点，快速找到最小父节点
-10. iOS 性能优化做了哪些尝试
-11. Instrument
-12. 可能造成循环引用的场景
+下一篇：[iOS 面试题积累 - iOS 篇2](./interview-questions2)
 
