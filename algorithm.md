@@ -607,9 +607,341 @@ BinaryTreeNode.m 文件：
 
 参考：[二叉树的各种问题]( https://www.jianshu.com/p/a270d117e116)
 
-
-
 ### 7. 链表：单链表 & 双链表
+
+- 单链表
+
+CHTSingleLinkedList.h
+
+```objective-c
+@interface CHTSingleLinkedNode : NSObject <NSCopying>
+
+@property (nonatomic, copy) NSString *key;
+@property (nonatomic, copy) NSString *value;
+@property (nonatomic, strong) CHTSingleLinkedNode *next;
+
+- (instancetype)initWithKey:(NSString *)key value:(NSString *)value;
+
++ (instancetype)nodeWithKey:(NSString *)key value:(NSString *)value;
+
+@end
+
+@interface CHTSingleLinkedList : NSObject
+
+- (void)insertNodeAtHead:(CHTSingleLinkedNode *)node;
+- (void)insertNode:(CHTSingleLinkedNode *)node;
+- (void)insertNode:(CHTSingleLinkedNode *)newNode beforeNodeWithKey:(NSString *)key;
+- (void)insertNode:(CHTSingleLinkedNode *)newNode afterNodeWithKey:(NSString *)key;
+- (void)removeNode:(CHTSingleLinkedNode *)node;
+- (void)bringNodeToHead:(CHTSingleLinkedNode *)node;
+- (CHTSingleLinkedNode *)nodeForKey:(NSString *)key;
+- (CHTSingleLinkedNode *)headNode;
+- (CHTSingleLinkedNode *)lastNode;
+- (void)reverse;
+- (void)readAllNodes;
+- (NSInteger)length;
+- (BOOL)isEmpty;
+
+@end
+```
+
+CHTSingleLinkedList.m
+
+```objective-c
+@implementation CHTSingleLinkedNode
+
+- (instancetype)initWithKey:(NSString *)key value:(NSString *)value
+{
+    self = [super init];
+    if (self) {
+        
+        _key = key.copy;
+        _value = value.copy;
+    }
+    return self;
+}
+
++ (instancetype)nodeWithKey:(NSString *)key value:(NSString *)value {
+    
+    return [[[self class] alloc] initWithKey:key value:value];
+}
+
+- (id)copyWithZone:(NSZone *)zone {
+    
+    CHTSingleLinkedNode *node = [[CHTSingleLinkedNode allocWithZone:zone] init];
+    node.key = _key.copy;
+    node.value = _value.copy;
+    node.next = _next;
+    
+    return node;
+}
+
+- (BOOL)isEqual:(id)other
+{
+    if (other == self) {
+        return YES;
+    } else if (![super isEqual:other]) {
+        return NO;
+    } else {
+        return [self isEqualToNode:(CHTSingleLinkedNode *)other];
+    }
+}
+
+- (BOOL)isEqualToNode:(CHTSingleLinkedNode *)node {
+    if (!node) {
+        return NO;
+    }
+    
+    BOOL haveEqualKey = (!self.key && !node.key) || [self.key isEqualToString:node.key];
+    BOOL haveEqualValue = (!self.value && !node.value) || [self.value isEqualToString:node.value];
+    
+    return haveEqualKey && haveEqualValue;
+}
+
+- (NSUInteger)hash
+{
+    return [_key hash] ^ [_value hash];
+}
+
+@end
+
+@interface CHTSingleLinkedList ()
+
+@property (nonatomic, strong) CHTSingleLinkedNode *headNode;
+@property (nonatomic, strong) NSMutableDictionary *innerMap;
+
+@end
+
+@implementation CHTSingleLinkedList
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        
+        _innerMap = [NSMutableDictionary new];
+    }
+    return self;
+}
+
+#pragma mark - public
+- (void)insertNodeAtHead:(CHTSingleLinkedNode *)node {
+    
+    if (!node || node.key.length == 0) {
+        return;
+    }
+    if ([self isNodeExists:node]) {
+        return;
+    }
+    _innerMap[node.key] = node;
+    if (!_headNode) {
+        
+        _headNode = node;
+    }else {
+        
+        node.next = _headNode;
+        _headNode = node;
+    }
+}
+
+- (void)insertNode:(CHTSingleLinkedNode *)node {
+    
+    if (!node || node.key.length == 0) {
+        
+        return;
+    }
+    if ([self isNodeExists:node]) {
+        return;
+    }
+    _innerMap[node.key] = node;
+    if (!_headNode) {
+        _headNode = node;
+        return;
+    }
+    CHTSingleLinkedNode *lastNode = [self lastNode];
+    lastNode.next = node;
+}
+
+- (void)insertNode:(CHTSingleLinkedNode *)newNode beforeNodeWithKey:(NSString *)key {
+    
+    if (!newNode || newNode.key.length == 0 || key.length == 0) {
+        
+        return;
+    }
+    if ([self isNodeExists:newNode]) {
+        return;
+    }
+    if (!_headNode) {
+        _headNode = newNode;
+        _innerMap[newNode.key] = newNode;
+        return;
+    }
+    CHTSingleLinkedNode *node = _innerMap[key];
+    if (node) {
+        _innerMap[newNode.key] = newNode;
+        CHTSingleLinkedNode *aheadNode = [self nodeBeforeNode:node];
+        if (aheadNode) {
+            aheadNode.next = newNode;
+            newNode.next = node;
+        }else {
+            _headNode = newNode;
+            newNode.next = node;
+        }
+    }else {
+        [self insertNode:newNode];
+    }
+}
+
+- (void)insertNode:(CHTSingleLinkedNode *)newNode afterNodeWithKey:(NSString *)key {
+    
+    if (!newNode || key.length == 0 || newNode.key.length == 0) {
+        return;
+    }
+    if ([self isNodeExists:newNode]) {
+        return;
+    }
+    if (!_headNode) {
+        _innerMap[newNode.key] = newNode;
+        _headNode = newNode;
+        return;
+    }
+    CHTSingleLinkedNode *node = _innerMap[key];
+    if (node) {
+        _innerMap[newNode.key] = newNode;
+        newNode.next = node.next;
+        node.next = newNode;
+    }else {
+        [self insertNode:newNode];
+    }
+}
+
+- (void)removeNode:(CHTSingleLinkedNode *)node {
+    
+    if (!node || node.key.length == 0) {
+        
+        return;
+    }
+    [_innerMap removeObjectForKey:node.key];
+    if (node.next) {
+        node.key = node.next.key;
+        node.value = node.next.value;
+        node.next = node.next.next;
+    }else {
+        CHTSingleLinkedNode *aheadNode = [self nodeBeforeNode:node];
+        aheadNode.next = nil;
+    }
+}
+
+- (void)bringNodeToHead:(CHTSingleLinkedNode *)node {
+    
+    if (!node || !_headNode) {
+        return;
+    }
+    if ([node isEqual:_headNode]) {
+        return;
+    }
+    CHTSingleLinkedNode *aheadNode = [self nodeBeforeNode:node];
+    aheadNode.next = node.next;
+    node.next = _headNode;
+    _headNode = node;
+}
+
+- (CHTSingleLinkedNode *)nodeForKey:(NSString *)key {
+    
+    if (key.length == 0) {
+        return nil;
+    }
+    return _innerMap[key];
+}
+
+- (CHTSingleLinkedNode *)headNode {
+    
+    return _headNode;
+}
+
+- (CHTSingleLinkedNode *)lastNode {
+    
+    CHTSingleLinkedNode *lastNode = _headNode;
+    while (lastNode.next) {
+        lastNode = lastNode.next;
+    }
+    return lastNode;
+}
+
+- (void)reverse {
+    
+    CHTSingleLinkedNode *pre = nil;
+    CHTSingleLinkedNode *current = _headNode;
+    CHTSingleLinkedNode *next = nil;
+    while (current) {
+        
+        next = current.next;
+        current.next = pre;
+        pre = current;
+        current = next;
+    }
+    _headNode = pre;
+}
+
+- (void)readAllNodes {
+    
+    CHTSingleLinkedNode *tmpNode = _headNode;
+    while (tmpNode) {
+        NSLog(@"key: %@ -- value: %@", tmpNode.key, tmpNode.value);
+        tmpNode = tmpNode.next;
+    }
+}
+- (NSInteger)length {
+    
+    NSInteger length = 0;
+    for (CHTSingleLinkedNode *node = _headNode; node; node = node.next) {
+        
+        length ++;
+    }
+    return length;
+}
+
+- (BOOL)isEmpty {
+    
+    return _headNode == nil;
+}
+
+#pragma mark - private
+
+- (CHTSingleLinkedNode *)nodeBeforeNode:(CHTSingleLinkedNode *)node {
+    
+    CHTSingleLinkedNode *targetNode = nil;
+    CHTSingleLinkedNode *tmpNode = _headNode;
+    while (tmpNode) {
+        if ([tmpNode.next isEqualToNode:node]) {
+            
+            targetNode = tmpNode;
+            break;
+        }else {
+            tmpNode = tmpNode.next;
+        }
+    }
+    return targetNode;
+}
+
+- (BOOL)isNodeExists:(CHTSingleLinkedNode *)node {
+    
+    CHTSingleLinkedNode *tempNode = _headNode;
+    while (tempNode) {
+        if ([tempNode isEqual:node]) {
+            return YES;
+        }
+        tempNode = tempNode.next;
+    }
+    return NO;
+}
+
+@end
+```
+
+- 双链表
+
+参考：[iOS 数据结构之链表](https://www.jianshu.com/p/12fe060811f2)
 
 
 
