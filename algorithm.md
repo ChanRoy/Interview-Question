@@ -120,7 +120,7 @@ func rand13() -> NSInteger {
     var x = 0
     
     repeat {
-        x = (rand7() + 1) * 7 + rand7()
+        x = (rand7() - 1) * 7 + rand7()
     }while x > 39;
     
     return x % 13 + 1;

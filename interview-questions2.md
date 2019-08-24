@@ -11,12 +11,41 @@ iOS 面试题积累 - iOS 篇2
 ### 31. Pod install & Pod update
 
 - 使用pod install来安装新的库，即使你的工程里面已经有了Podfile，并且已经执行过pod install命令了；所以即使你是添加或移除库，都应该使用pod install。
-
 - 使用pod update [PODNAME] 只有在你需要更新库到更新的版本时候用。
-
 - 提交你的Podfile.lock文件
 
-### 32. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
+### 32. CocoaPods & Carhage & SPM（Swift Package Manager）
+
+- CocoaPods优点
+  - 使用方便，除编写 Podfile 以外其他几乎都是自动完成
+  - 提供的三方框架数量巨大
+  - 静态/动态编译均支持
+
+- CocoaPods缺点
+
+  - 每次更新环境都需要连接到中心仓库，比较耗时
+
+  - 使用xcworkspace构建与产品绑定的pod项目，每次pod install/pod update/xcode clean（Podfile.lock发生改变）都会重新编译依赖文件，极大的影响项目编译速度
+
+  - 为了兼容CocoaPods，框架作者有很多额外的工作
+
+- Carthage优点
+  - 与CocoaPods 无缝集成，方便项目迁移
+  - 除了必要更新，不需要重复编译依赖文件
+  - 不需要访问中心仓库获取配置，节省时间
+  - 开发者为自己的框架添加Carthage支持异常简单（Xcode -> Project/Framework -> Set Scheme Shared）
+
+- Carthage缺点
+  - 仍有很多库尚未支持Carthage
+  - 只支持动态库
+  - 需要自行管理依赖的接入
+
+- SPM
+
+  Swift Package Manager业内简称为SPM，是苹果官方在Swift3.0时集成在系统里的第三方库管理工具（库），用它可以自动downloading、compiling和linking第三方库，使用起来也十分简洁高效，不过缺点是目前只支持mac OS。
+  详见：https://swift.org/package-manager
+
+### 33. 有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈
 
 分享最近刚刚遇到的一个BUG：
 
@@ -37,24 +66,24 @@ iOS 13下，Debug模式，点击自定义的一个[LYWebViewController](https://
 
 因为我们Xcode设置了全局异常断点，而且类型为all，所以c++的一些异常也会报错。而我们遇到的这个异常是C++异常，并且不影响正常程序运行，解决方法是把全局断点设置成objective-c类型。
 
-### 33. 父类的静态方法能不能被子类重写
+### 34. 父类的静态方法能不能被子类重写
 
 能。（因为我试过）
 
-### 34. OC中向nil对象发送消息会发生什么
+### 35. OC中向nil对象发送消息会发生什么
 
 如果传递给 objc_msgSend 的 self 参数是 nil，该函数不会执行有意义的操作，直接返回。
 
 因为OC的函数都是通过objc_msgSend进行消息发送来实现的，相对于C和C++来说，对于空指针的操作会引起crash问题，而objc_msgSend会通过判断self来决定是否发送消息，如果self为nil，那么selector也会为空，直接返回，不会出现问题。视方法返回值，向nil发消息可能会返回nil（返回值为对象），0（返回值为一些基础数据）或 返回值为结构体，发送给 nil 的消息将返回0，结构体中各个字段的值将都是0，等等。但对于[NSNull null]对象发送消息时，是会crash的，因为NSNull类只有一个null方法。
 
-### 35. iOS中的nil、Nil、NULL、NSNull的区别
+### 36. iOS中的nil、Nil、NULL、NSNull的区别
 
 1. nil，定义一个空的实例，指向OC中对象的空指针。
 2. NULL，NULL可以用在C语言的各种指针上。
 3. Nil，定义一个空的类。
 4. NSNull，NSNull是一个类，它定义了一个单例对象用于表示集合对象的空值。
 
-### 36. Instrument调试性能
+### 37. Instrument调试性能
 
 1. Leaks内存泄漏检测：参考https://www.wangquanwei.com/63.html
 
@@ -75,7 +104,7 @@ iOS 13下，Debug模式，点击自定义的一个[LYWebViewController](https://
 
 4. 我们还可以使用 `Activity Monitor`、`Allocations`、`Zombies` 等模板来针对性地做内存监测。
 
-### 37. MVC、MVP、MVVM、VIPER
+### 38. MVC、MVP、MVVM、VIPER
 
 1. MVC
 
@@ -158,7 +187,45 @@ iOS 13下，Debug模式，点击自定义的一个[LYWebViewController](https://
 
 [论MVVM伪框架结构和MVC中M的实现机制](https://www.jianshu.com/p/33c7e2f3a613)
 
+### 39. 网络五层协议
 
+OSI七层协议模型主要是：应用层（Application）、表示层（Presentation）、会话层（Session）、传输层（Transport）、网络层（Network）、数据链路层（Data Link）、物理层（Physical）。
+
+五层体系结构包括：应用层、运输层、网络层、数据链路层和物理层。 
+
+1. 第五层——应用层(application layer) 
+
+- **应用层(application layer)：**是体系结构中的最高。直接为用户的应用进程（例如电子邮件、文件传输和终端仿真）提供服务。
+- 在因特网中的应用层协议很多，如支持万维网应用的HTTP协议，支持电子邮件的SMTP协议，支持文件传送的FTP协议，DNS，POP3，SNMP，Telnet等等。
+
+2. 第四层——运输层(transport layer)
+
+- **运输层(transport layer)：**负责向两个主机中进程之间的通信提供服务。由于一个主机可同时运行多个进程，因此运输层有复用和分用的功能
+- 复用，就是多个应用层进程可同时使用下面运输层的服务。
+- 分用，就是把收到的信息分别交付给上面应用层中相应的进程。
+- **运输层主要使用以下两种协议：** 
+  **(1) 传输控制协议TCP(Transmission Control Protocol)：**面向连接的，数据传输的单位是报文段，能够提供可靠的交付。 
+  **(2) 用户数据包协议UDP(User Datagram Protocol)：**无连接的，数据传输的单位是用户数据报，不保证提供可靠的交付，只能提供“尽最大努力交付”。
+
+3.  第三层——网络层(network layer)
+
+- **网络层(network layer)主要包括以下两个任务：**
+- **(1) 负责为分组交换网上的不同主机提供通信服务。在发送数据时，网络层把运输层产生的报文段或用户数据报封装成分组或包进行传送。在TCP/IP体系中，由于网络层使用IP协议，因此分组也叫做IP数据报，或简称为数据报。**
+- **(2) 选中合适的路由，使源主机运输层所传下来的分组，能够通过网络中的路由器找到目的主机。**
+- **协议：IP,ICMP,IGMP,ARP,RARP**
+
+4. 第二层——数据链路层(data link layer)
+
+- **数据链路层(data link layer)：**常简称为链路层，我们知道，两个主机之间的数据传输，总是在一段一段的链路上传送的，也就是说，在两个相邻结点之间传送数据是直接传送的(点对点)，这时就需要使用专门的链路层的协议。
+- 在两个相邻结点之间传送数据时，数据链路层将网络层交下来的IP数据报组装成帧(framing)，在两个相邻结点之间的链路上“透明”地传送帧中的数据。
+- 每一帧包括数据和必要的控制信息(如同步信息、地址信息、差错控制等)。典型的帧长是几百字节到一千多字节。
+- 注：”透明”是一个很重要的术语。它表示，某一个实际存在的事物看起来却好像不存在一样。”在数据链路层透明传送数据”表示无力什么样的比特组合的数据都能够通过这个数据链路层。因此，对所传送的数据来说，这些数据就“看不见”数据链路层。或者说，数据链路层对这些数据来说是透明的。 
+  (1)在接收数据时，控制信息使接收端能知道一个帧从哪个比特开始和到哪个比特结束。这样，数据链路层在收到一个帧后，就可从中提取出数据部分，上交给网络层。 
+  (2)控制信息还使接收端能检测到所收到的帧中有无差错。如发现有差错，数据链路层就简单地丢弃这个出了差错的帧，以免继续传送下去白白浪费网络资源。如需改正错误，就由运输层的TCP协议来完成。
+
+5. 第一层——物理层(physical layer)
+
+- **物理层(physical layer)：**在物理层上所传数据的单位是比特。物理层的任务就是透明地传送比特流。
 
 
 
