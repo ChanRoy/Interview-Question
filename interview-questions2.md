@@ -4,18 +4,18 @@ iOS 面试题积累 - iOS 篇2
 
 ### 索引
 
-31. [Pod install & Pod update]()
-32. [CocoaPods & Carhage & SPM（Swift Package Manager）]()
-33. [有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈]()
-34. [父类的静态方法能不能被子类重写]()
-35. [OC中向nil对象发送消息会发生什么]()
-36. [iOS中的nil、Nil、NULL、NSNull的区别]()
-37. [Instrument调试性能]()
-38. [MVC、MVP、MVVM、VIPER]()
-39. [网络五层协议]()
-40. [启动时间的监控和优化]()
-41. [合理使用光栅化 shouldRasterize]()
-42. [iOS 性能优化]()
+31. [Pod install & Pod update](./interview-questions2.md#31-pod-install--pod-update)
+32. [CocoaPods & Carhage & SPM（Swift Package Manager）](./interview-questions2.md#32-cocoapods--carhage--spmswift-package-manager)
+33. [有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈](./interview-questions2.md#33-有什么特别的bug如何调试如何定位开发环境及线上环境均谈一谈)
+34. [父类的静态方法能不能被子类重写](./interview-questions2.md#34-父类的静态方法能不能被子类重写)
+35. [OC中向nil对象发送消息会发生什么](./interview-questions2.md#35-oc中向nil对象发送消息会发生什么)
+36. [iOS中的nil、Nil、NULL、NSNull的区别](./interview-questions2.md#36-ios中的nilnilnullnsnull的区别)
+37. [Instrument调试性能](./interview-questions2.md#37-instrument调试性能)
+38. [MVC、MVP、MVVM、VIPER](./interview-questions2.md#38-mvcmvpmvvmviper)
+39. [网络五层协议](./interview-questions2.md#39-网络五层协议)
+40. [启动时间的监控和优化](./interview-questions2.md#40-启动时间的监控和优化)
+41. [合理使用光栅化 shouldRasterize](./interview-questions2.md#41-合理使用光栅化-shouldrasterize)
+42. [iOS 性能优化](./interview-questions2.md#42-ios-性能优化)
 
 ------
 
@@ -198,6 +198,10 @@ iOS 13下，Debug模式，点击自定义的一个[LYWebViewController](https://
 
 [论MVVM伪框架结构和MVC中M的实现机制](https://www.jianshu.com/p/33c7e2f3a613)
 
+[iOS VIPER架构实践(一)：从MVC到MVVM到VIPER](https://www.jianshu.com/p/8418fba98e1a)
+
+[浅谈 MVC、MVP 和 MVVM 架构模式](https://draveness.me/mvx.html)
+
 ### 39. 网络五层协议
 
 OSI七层协议模型主要是：应用层（Application）、表示层（Presentation）、会话层（Session）、传输层（Transport）、网络层（Network）、数据链路层（Data Link）、物理层（Physical）。
@@ -300,6 +304,30 @@ t2 = main方法执行之后到AppDelegate类中的- `(BOOL)Application:(UIApplic
   - 使用代码手动生成圆角`image`设置到要显示的`View`上，利用`UIBezierPath`（`Core Graphics`框架）画出来圆角图片。
 
 参考：[iOS 性能优化总结](https://juejin.im/post/5ace078cf265da23994ee493)
+
+### 43. id 和 void*
+
+id指任意一个Objective C类的对象的指针，仅限于Objective C类的对象；
+
+void *指一个未知类型或未知内容的指针，提供了一个对其他API的对象的指针；
+
+参考：[Objective-C: difference between id and void *](https://stackoverflow.com/questions/1304176/objective-c-difference-between-id-and-void)
+
+### 44. LinkMap
+
+我们编写的源码需要经过编译、链接，最终生成一个可执行文件。在编译阶段，每个类会生成对应的.o文件（目标文件）。在链接阶段，会把.o文件和动态库链接在一起。Link Map File就是这样一个记录链接相关信息的纯文本文件，里面记录了可执行文件的路径、CPU架构、目标文件、符号等信息。
+
+[LinkMap解析工具：检查每个类占用大小](https://github.com/huanxsd/LinkMap)
+
+参考：[iOS调优 | 深入理解Link Map File](https://www.jianshu.com/p/52e0dee35830)
+
+### 45. dSYM文件
+
+Xcode编译项目后，我们会看到一个同名的 dSYM 文件，dSYM 是保存 16 进制函数地址映射信息的中转文件，我们调试的 symbols 都会包含在这个文件中，并且每次编译项目的时候都会生成一个新的 dSYM 文件，位于 /Users/<用户名>/Library/Developer/Xcode/Archives 目录下，对于每一个发布版本我们都很有必要保存对应的 Archives 文件。
+
+iOS上报的错误是一堆内存地址和偏移量，开发者无法从中获取有效的信息，而使用错误映射表进行还原后，就能够得到正确的堆栈信息。
+
+当我们软件 release 模式打包或上线后，不会像我们在 Xcode 中那样直观的看到用崩溃的错误，这个时候我们就需要分析 crash report 文件了，iOS 设备中会有日志文件保存我们每个应用出错的函数内存地址，通过 Xcode 的 Organizer 可以将 iOS 设备中的 DeviceLog 导出成 crash 文件，这个时候我们就可以通过出错的函数地址去查询 dSYM 文件中程序对应的函数名和文件名。大前提是我们需要有软件版本对应的 dSYM 文件，这也是为什么我们很有必要保存每个发布版本的 Archives 文件了。
 
 
 

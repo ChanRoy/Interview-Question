@@ -781,13 +781,76 @@ isEqual方法是为了通过hash值来找到对象在hash表中的位置。
 
 ### 23. FMDB是线程安全的吗？
 
+1. iOS 系统自带的 SQLite 究竟是不是线程安全的？
+
+- SQLite 有3种线程模式：
+  - Single-thread，单线程模式，编译时所有互斥锁代码会被删除掉，多线程环境下不安全。
+  - Multi-thread，在大部分情况下多线程环境安全，比如同一个数据库，开多个线程，每个线程都开一个连接同时访问这个库，这种情况是安全的。但是也有不安全情况：多个线程同时使用同一个数据库连接（或从该连接派生的任何预准备语句）
+  - Serialized，完全线程安全。
+
+>在iOS平台上，默认使用的是第2种线程模式编译的（Multi-thread），也就是只有一个线程能够打开数据库操作，其他线程要操作数据库必须等数据库关闭后才能打开操作。多线程时：每个线程独立打开数据库，操作数据库，操作完后关闭数据库。打开和关闭都比较费时间，而且要手动控制打开关闭锁，在每个线程操作不频繁时可用该方法。 
+>如果多个线程频繁操作数据库，使用以上方法很容易造成系统崩溃，解决方案： 
+>①开启第3种串行模式，使用一个类（单例方式）操作数据库。 
+>②使用串行队列操作数据库。
+
+2. 关于FMDB
+
 - `SQLITE`线程安全, 与`FMDB多线程安全`是两回事；
-- `SQLITE`默认的线程模式是`串行模式`, 是线程安全的；
 - `FMDatabase`多线程不安全, 单个`FMDatabaseQueue`是多线程安全的；
 - 为什么`FMDatabaseQueue`
   - 其多线程是在不同子线程把任务追加`_queue`中
   - 真正操作数据库的任务还是有`_queue`来分配
   - `_queue`是一个串行队列, 且是同步执行, 所以所有任务是一个接一个执行, 并不会造成资源抢夺
+
+- 由此引发的问题：
+
+  > 但是这么一来就有了一个问题：如果后台在执行大量的更新，而主线程也需要访问数据库，虽然要访问的数据量很少，但是在后台执行完之前，还是会阻塞主线程。
+  >
+  > 如果你是在后台使用的inDatabase来执行更新，可以考虑换成inTransaction，后者比前者更新起来快很多，特别是在更新量比较大的时候（比如更新1000条或10000条）。拆解你的更新数据量，如果有300条，可以分10次、每次更新30条。当然有时不能这么做，因为你可能通过网络请求回来的数据，你希望一次性、完整地写入到数据库中，虽然有局限性，不过这确实能很好地减少每个Block占用数据库的时间。
+
+  >上面可以改善问题，但是问题依然是存在的，在大多数时候，你应该把从主线程调用inDatabase和inTransaction
+  >放在异步里：
+
+  ```objective-c
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{ 
+          [self.databaseQueue inDatabase:^(FMDatabase *db) { 
+                //do something... }];
+  });
+  ```
+
+  所以，其实就是写的时候用FMDatabaseQueue直接写，因为是串行队列，不会造成数据竞争；读的时候将操作放到字线程中异步调用。也就是异步读同步写的处理方式。
+
+3. FMDB 事务：inTransaction
+
+   如果要保证多个操作同时成功或者同时失败，用事务，即把多个操作放在同一个事务中。
+
+   ——FMDB中，拿到数据库直接操作事务，如下：
+
+   ```
+   [self.queue inDatabase:^(FMDatabase *db) {
+           [db beginTransaction];
+           [db executeUpdate:@"UPDATE t_student SET name='Jack' WHERE id=?",@2];
+           [db executeUpdate:@"UPDATE t_student SET name='Tomy' WHERE id=?",@3];
+           //发现情况不对时，主动回滚用下面语句。否则是根据commit结果，如成功就成功，如不成功才回滚
+           [db rollback];
+           [db executeUpdate:@"UPDATE t_student SET name='Eric' WHERE id=?",@4];
+           [db commit];
+       }];
+   ```
+
+   或者：
+
+   ```
+   [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+               [db executeUpdate:@"UPDATE t_student SET name='Jack' WHERE id=?",@2];
+               [db executeUpdate:@"UPDATE t_student SET name='Tomy' WHERE id=?",@3];
+               //发现情况不对时，主动回滚用下面语句。
+               *rollback=YES;
+               [db executeUpdate:@"UPDATE t_student SET name='Eric' WHERE id=?",@4];
+           }];
+   ```
+
+   
 
 ### 24. FPS如何计算
 
