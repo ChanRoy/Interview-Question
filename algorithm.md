@@ -176,6 +176,7 @@ b. 冒泡排序（Bubble Sort）
 c. 插入排序（Insertion Sort）
 
 ```objective-c
+// 有点像玩扑克牌，每次挑一张牌往前面已经排好序的牌插入
 - (void)insertionSort:(NSArray <NSNumber *>*)arr {
     
     NSMutableArray <NSNumber *>*mArr = arr.mutableCopy;

@@ -5,6 +5,17 @@ iOS 面试题积累 - iOS 篇2
 ### 索引
 
 31. [Pod install & Pod update]()
+32. [CocoaPods & Carhage & SPM（Swift Package Manager）]()
+33. [有什么特别的BUG，如何调试，如何定位，开发环境及线上环境均谈一谈]()
+34. [父类的静态方法能不能被子类重写]()
+35. [OC中向nil对象发送消息会发生什么]()
+36. [iOS中的nil、Nil、NULL、NSNull的区别]()
+37. [Instrument调试性能]()
+38. [MVC、MVP、MVVM、VIPER]()
+39. [网络五层协议]()
+40. [启动时间的监控和优化]()
+41. [合理使用光栅化 shouldRasterize]()
+42. [iOS 性能优化]()
 
 ------
 
@@ -227,11 +238,68 @@ OSI七层协议模型主要是：应用层（Application）、表示层（Presen
 
 - **物理层(physical layer)：**在物理层上所传数据的单位是比特。物理层的任务就是透明地传送比特流。
 
+### 40. 启动时间的监控和优化
 
+t(App总启动时间) = t1(main()之前的加载时间) + t2(main()之后的加载时间)。 t1 = 系统dylib(动态链接库)和自身App可执行文件的加载； 
+t2 = main方法执行之后到AppDelegate类中的- `(BOOL)Application:(UIApplication *)Application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions`方法执行结束前这段时间，主要是构建第一个界面，并完成渲染展示。
 
+- 对于main()调用之前的耗时我们可以优化的点有：
 
+1. 减少不必要的framework，因为动态链接比较耗时
 
+2. check framework应当设为optional和required，如果该framework在当前App支持的所有iOS系统版本都存在，那么就设为required，否则就设为optional，因为optional会有些额外的检查
 
+3. 合并或者删减一些OC类，关于清理项目中没用到的类，使用工具AppCode代码检查功能，查到当前项目中没有用到的类如下：
+
+   - 删减一些无用的静态变量
+
+   - 删减没有被调用到或者已经废弃的方法
+   - 将不必须在+load方法中做的事情延迟到+initialize中
+   - 尽量不要用C++虚函数(创建虚函数表有开销)
+
+- main()调用之后的优化
+
+1. 纯代码方式而不是storyboard加载首页UI。
+2. 对didFinishLaunching里的函数考虑能否挖掘可以延迟加载或者懒加载，需要与各个业务方pm和rd共同check 对于一些已经下线的业务，删减冗余代码。 
+   对于一些与UI展示无关的业务，如微博认证过期检查、图片最大缓存空间设置等做延迟加载
+3. 对实现了+load()方法的类进行分析，尽量将load里的代码延后调用。
+4. 上面统计数据显示展示feed的导航控制器页面(NewsListViewController)比较耗时，对于viewDidLoad以及viewWillAppear方法中尽量去尝试少做，晚做，不做。
+
+### 41. 合理使用光栅化 shouldRasterize
+
+光栅化是把`GPU`的操作转到`CPU`上，生成位图缓存，直接读取复用。
+
+##### 优点：
+
+- `CALayer`会被光栅化为`bitmap`，`shadows`、`cornerRadius`等效果会被缓存。
+
+##### 缺点：
+
+- 更新已经光栅化的`layer`，会造成离屏渲染。
+- `bitmap`超过`100ms`没有使用就会移除。
+- 受系统限制，缓存的大小为 2.5X Screen Size。
+
+**shouldRasterize适合静态页面显示，动态页面会增加开销。如果设置了shouldRasterize为 YES，那也要记住设置rasterizationScale为contentsScale。**
+
+### 42. iOS 性能优化
+
+- NSDateFormatter
+- 启动时间优化，参考40
+- Instrument：Time Profiler、CoreAnimation（Color Blended Layers、Color Misaligned Images、Color Offscreen-Rendered Yellow）
+- 减少透明 view
+- 不要动态创建视图
+- 异步渲染
+- 离屏渲染的优化建议
+  - 使用`ShadowPath`指定`layer`阴影效果路径。
+  - 使用异步进行`layer`渲染（`Facebook`开源的异步绘制框架`AsyncDisplayKit`）。
+  - 设置`layer`的`opaque`值为`YES`，减少复杂图层合成。
+  - 尽量使用不包含透明（`alpha`）通道的图片资源。
+  - 尽量设置`layer`的大小值为整形值。
+  - 直接让美工把图片切成圆角进行显示，这是效率最高的一种方案。
+  - 很多情况下用户上传图片进行显示，可以在客户端处理圆角。
+  - 使用代码手动生成圆角`image`设置到要显示的`View`上，利用`UIBezierPath`（`Core Graphics`框架）画出来圆角图片。
+
+参考：[iOS 性能优化总结](https://juejin.im/post/5ace078cf265da23994ee493)
 
 
 
