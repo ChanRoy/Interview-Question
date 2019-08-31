@@ -16,6 +16,22 @@ iOS 面试题积累 - iOS 篇2
 40. [启动时间的监控和优化](./interview-questions2.md#40-启动时间的监控和优化)
 41. [合理使用光栅化 shouldRasterize](./interview-questions2.md#41-合理使用光栅化-shouldrasterize)
 42. [iOS 性能优化](./interview-questions2.md#42-ios-性能优化)
+43. [id 和 void*](./interview-questions2.md#43-id-和-void)
+44. [LinkMap](./interview-questions2.md#44-linkmap)
+45. [dSYM文件](./interview-questions2.md#45-dsym文件)
+46. [RAC（ReactiveCocoa）的冷信号、热信号](./interview-questions2.md#46-racreactivecocoa的冷信号热信号)
+47. [单例、饿汉式、懒汉式](./interview-questions2.md#47-单例饿汉式懒汉式)
+48. [Runtime、isa、imp](./interview-questions2.md#48-runtimeisaimp)
+49. [Method Swizzling 会造成什么问题](./interview-questions2.md#49-method-swizzling-会造成什么问题)
+50. [iOS中的hash](./interview-questions2.md#49-method-swizzling-会造成什么问题)
+51. [内存分区](./interview-questions2.md#51-内存分区)
+52. [__block](./interview-questions2.md#52-__block)
+53. [ViewController 生命周期](./interview-questions2.md#53-viewcontroller-生命周期)
+54. [HTTP协议](./interview-questions2.md#54-http协议)
+55. [Swift、OC比较](./interview-questions2.md#55-swiftoc比较)
+56. [AFNetworking 2.0 与 3.0 版本有什么区别](./interview-questions2.md#56-afnetworking-20-与-30-版本有什么区别)
+57. [NSURLSession](./interview-questions2.md#57-nsurlsession)
+58. 
 
 ------
 
