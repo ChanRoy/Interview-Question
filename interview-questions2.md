@@ -447,7 +447,411 @@ iOS上报的错误是一堆内存地址和偏移量，开发者无法从中获�
 
 参考：[谈谈ObjectiveC中__block](https://juejin.im/entry/599e6385f265da24865e57a4)
 
-### 53. 设计模式
+### 53. ViewController 生命周期
+
+1. init(coder:)
+   - 当使用 Storyboard 时，控制器的构造器为 `init(coder:)`。
+   - 该构造器为必需构造器，如果重写其他构造器，则必须重写该构造器。
+   - 该构造器为可失败构造器，即有可能构造失败，返回 nil。
+   - 该方法来源自 NSCoding 协议，而 UIViewController 遵从这一协议。
+   - 该方法被调用意味着控制器有可能（并非一定）在未来会显示。
+   - 在控制器生命周期中，该方法只会被调用一次。
+
+2. awakeFromNib()
+   - 当使用 Storyboard 时，该方法会被调用。
+   - 当调用该方法时，将保证所有的 outlet 和 action 连接已经完成。
+   - 该方法内部必须调用父类该方法，虽然默认实现为空，但 UIKit 中许多类的该方法为非空。
+   - 由于控制器中对象的初始化顺序不能确定，所以构造器中不应该向其他对象发送消息，而应当在 `awakeFromNib()`中安全地发送。
+   - 通常使用 `awakeFromNib()`可以进行在设计时无法完成的必要额外设置。
+
+3. init(nibName:bundle:)
+   - 当使用纯代码创建控制器，控制器的构造器为 `init(nibName:bundle:)`。
+   - 虽然使用代码创建时调用了该构造器，但传入的参数均为 nil。
+
+4. loadView()
+   - `loadView()`即加载控制器管理的 view。
+   - 不能直接手动调用该方法；当 view 被请求却为 nil 时，该方法加载并创建 view。
+   - 若控制器有关联的 Nib 文件，该方法会从 Nib 文件中加载 view；如果没有，则创建空白 UIView 对象。
+   - 如果使用 Interface Builder 创建 view，则务必不要重写该方法。
+   - 可以使用该方法手动创建视图，且需要将根视图分配为 view；自定义实现不应该再调用父类的该方法。
+   - 执行其他初始化操作，建议放在 `viewDidLoad()`中。
+
+5. viewDidLoad()
+   - view 被加载到内存后调用 `viewDidLoad()`。
+   - 重写该方法需要首先调用父类该方法。
+   - 该方法中可以额外初始化控件，例如添加子控件，添加约束。
+   - 该方法被调用意味着控制器有可能（并非一定）在未来会显示。
+   - 在控制器生命周期中，该方法只会被调用一次。
+
+6. viewWillAppear(_:)
+   - 该方法在控制器 view 即将添加到视图层次时以及展示 view 时所有动画配置前被调用。
+   - 重写该方法需要首先调用父类该方法。
+   - 该方法中可以进行操作即将显示的 view，例如改变状态栏的取向，类型。
+   - 该方法被调用意味着控制器将一定会显示。
+   - 在控制器生命周期中，该方法可能会被多次调用。
+
+7. viewWillLayoutSubviews()
+   - 该方法在通知控制器将要布局 view 的子控件时调用。
+   - 每当视图的 bounds 改变，view 将调整其子控件位置。
+   - 该方法可重写以在 view 布局子控件前做出改变。
+   - 该方法的默认实现为空。
+   - 该方法调用时，AutoLayout 未起作用。
+   - 在控制器生命周期中，该方法可能会被多次调用。
+
+8. viewDidLayoutSubviews()
+   - 该方法在通知控制器已经布局 view 的子控件时调用。
+   - 该方法可重写以在 view 布局子控件后做出改变。
+   - 该方法的默认实现为空。
+   - 该方法调用时，AutoLayout 已经完成。
+   - 在控制器生命周期中，该方法可能会被多次调用。
+
+9. viewDidAppear(_:)
+   - 该方法在控制器 view 已经添加到视图层次时被调用。
+   - 重写该方法需要首先调用父类该方法。
+   - 该方法可重写以进行有关正在展示的视图操作。
+   - 在控制器生命周期中，该方法可能会被多次调用。
+
+10. viewWillDisappear(_:)
+    - 该方法在控制器 view 将要从视图层次移除时被调用。
+    - 类似 `viewWillAppear(_:)`。
+    - 该方法可重写以提交变更，取消视图第一响应者状态。
+
+11. viewDidDisappear(_:)
+    - 该方法在控制器 view 已经从视图层次移除时被调用。
+    - 类似 `viewDidAppear(_:)`。
+    - 该方法可重写以清除或隐藏控件。
+
+12. didReceiveMemoryWarning()
+    - 当内存预警时，该方法被调用。
+    - 不能直接手动调用该方法。
+    - 该方法可重写以释放资源、内存。
+
+13. deinit
+    
+- 控制器销毁时（离开堆），调用该方法。
+    
+14. 假设现在有一个 AViewController(简称 Avc) 和 BViewController (简称 Bvc)，通过 navigationController 的 push 实现 Avc 到 Bvc 的跳转，下面是各个方法的执行执行顺序：
+
+    ```
+    1. A viewDidLoad  
+    2. A viewWillAppear  
+    3. A viewDidAppear  
+    4. B viewDidLoad  
+    5. A viewWillDisappear  
+    6. B viewWillAppear  
+    7. A viewDidDisappear  
+    8. B viewDidAppear  
+    ```
+
+    如果再从 Bvc 跳回 Avc，会产生下面的执行顺序：
+
+    ```
+    1. B viewWillDisappear  
+    2. A viewWillAppear  
+    3. B viewDidDisappear  
+    4. A viewDidAppear  
+    ```
+
+### 54. HTTP协议
+
+1. HTTP特性
+   - HTTP 协议构建于 TCP/IP 协议之上，是一个应用层协议，默认端口号是 80
+   - HTTP 是**无连接无状态**的
+
+2. HTTP报文
+
+   - 请求报文
+
+     HTTP 协议是以 ASCII 码传输，建立在 TCP/IP 协议之上的应用层规范。规范把 HTTP 请求分为三个部分：状态行、请求头、消息主体。类似于下面这样：
+
+     ```
+     <method> <request-URL> <version>
+     <headers>
+     
+     <entity-body>
+     ```
+
+     HTTP 定义了与服务器交互的不同方法，最基本的方法有4种，分别是`GET`，`POST`，`PUT`，`DELETE`。`URL`全称是资源描述符，我们可以这样认为：一个`URL`地址，它用于描述一个网络上的资源，而 HTTP 中的`GET`，`POST`，`PUT`，`DELETE`就对应着对这个资源的查，增，改，删4个操作。
+
+     注意事项
+
+     - GET 可提交的数据量受到URL长度的限制，HTTP 协议规范没有对 URL 长度进行限制。这个限制是特定的浏览器及服务器对它的限制
+     - 理论上讲，POST 是没有大小限制的，HTTP 协议规范也没有进行大小限制，出于安全考虑，服务器软件在实现时会做一定限制
+     - 参考上面的报文示例，可以发现 GET 和 POST 数据内容是一模一样的，只是位置不同，一个在 URL 里，一个在 HTTP 包的包体里
+
+   - 响应报文
+
+     HTTP 响应与 HTTP 请求相似，HTTP响应也由3个部分构成，分别是：
+
+     - 状态行
+     - 响应头(Response Header)
+     - 响应正文
+
+     状态行由协议版本、数字形式的状态代码、及相应的状态描述，各元素之间以空格分隔。
+
+     常见的状态码有如下几种：
+
+     - `200 OK` 客户端请求成功
+     - `301 Moved Permanently` 请求永久重定向
+     - `302 Moved Temporarily` 请求临时重定向
+     - `304 Not Modified` 文件未修改，可以直接使用缓存的文件。
+     - `400 Bad Request` 由于客户端请求有语法错误，不能被服务器所理解。
+     - `401 Unauthorized` 请求未经授权。这个状态代码必须和WWW-Authenticate报头域一起使用
+     - `403 Forbidden` 服务器收到请求，但是拒绝提供服务。服务器通常会在响应正文中给出不提供服务的原因
+     - `404 Not Found` 请求的资源不存在，例如，输入了错误的URL
+     - `500 Internal Server Error` 服务器发生不可预期的错误，导致无法完成客户端的请求。
+     - `503 Service Unavailable` 服务器当前不能够处理客户端的请求，在一段时间之后，服务器可能会恢复正常。
+
+   - Cookie
+
+     Cookie 是Web 服务器发送给客户端的一小段信息，客户端请求时可以读取该信息发送到服务器端，进而进行用户的识别。对于客户端的每次请求，服务器都会将 Cookie 发送到客户端,在客户端可以进行保存,以便下次使用。
+
+     客户端可以采用两种方式来保存这个 Cookie 对象，一种方式是保存在客户端内存中，称为临时 Cookie，浏览器关闭后这个 Cookie 对象将消失。另外一种方式是保存在客户机的磁盘上，称为永久 Cookie。以后客户端只要访问该网站，就会将这个 Cookie 再次发送到服务器上，前提是这个 Cookie 在有效期内，这样就实现了对客户的跟踪。
+
+     Cookie 是可以被客户端禁用的。
+
+   - Session
+
+     每一个用户都有一个不同的 session，各个用户之间是不能共享的，是每个用户所独享的，在 session 中可以存放信息。
+
+     在服务器端会创建一个 session 对象，产生一个 sessionID 来标识这个 session 对象，然后将这个 sessionID 放入到 Cookie 中发送到客户端，下一次访问时，sessionID 会发送到服务器，在服务器端进行识别不同的用户。
+
+     Session 的实现依赖于 Cookie，如果 Cookie 被禁用，那么 session 也将失效。
+
+ ### 55. Swift、OC比较
+
+1. swift和OC的共同点：
+
+   - `OC`出现过的绝大多数概念，比如**引用计数**、**ARC**（自动引用计数）、**属性**、**协议**、**接口**、**初始化**、**扩展类**、**命名参数**、**匿名函数**等，在`Swift`中继续有效（可能最多换个术语）。
+
+   - `Swift`和`Objective-C`共用一套运行时环境，`Swift`的类型可以桥接到`Objective-C`（下面我简称OC），反之亦然
+
+2. swift的优点：
+
+   - swift注重安全，`OC`注重灵活
+
+   - swift注重面向协议编程、函数式编程、面向对象编程，`OC`注重面向对象编程
+
+   - swift注重值类型，`OC`注重指针和引用
+
+   - swift是静态类型语言，`OC`是动态类型语言
+
+   - swift容易阅读，文件结构和大部分语法简易化，只有.swift文件，结尾不需要分号
+
+   - swift中的可选类型，是用于所有数据类型，而不仅仅局限于类。相比于`OC`中的`nil`更加安全和简明
+
+   - swift中的[泛型类型](https://link.juejin.im/?target=https%3A%2F%2Fblog.bombox.org%2F2018-06-14%2Fswift-generic%2F)更加方便和通用，而非`OC`中只能为集合类型添加泛型
+
+   - swift中各种方便快捷的[高阶函数](https://link.juejin.im/?target=https%3A%2F%2Fmaojianxiang.github.io%2F2017%2F07%2F04%2FSwift%E4%B8%AD%E7%9A%84%E9%AB%98%E9%98%B6%E5%87%BD%E6%95%B0%2F)（`函数式编程`） (**Swift的标准数组支持三个高阶函数：map，filter和reduce,以及map的扩展flatMap**)
+
+   - swift新增了两种权限，细化权限。**open> public> internal(默认)> fileprivate> private**
+
+   - swift中独有的元组类型(`tuples`)，把多个值组合成复合值。元组内的值可以是任何类型，并不要求是相同类型的。
+
+3. swift的不足：
+   - 版本不稳定
+   - 公司使用比例不高，使用人数比例偏低
+   - 有些语法其实可以只规定一种格式，不必这样也行，那样也行。像Go一样禁止一切（Go有点偏激）耍花枪的东西，同一个规范，方便团队合作和阅读他人代码。
+
+参考：[来一次有侧重点的区分Swift与Objective-C](https://juejin.im/post/5c653aa6e51d457fbf5dc298#heading-0)
+
+### 56. AFNetworking 2.0 与 3.0 版本有什么区别
+
+1. 主要区别
+
+   在AFNetworking 3.0之前，底层是通过封装NSURLConnection来实现的。
+
+   AFNetworking 3.0之后，底层是通过封装NSURLSession来实现的。
+
+2. 从类的使用上
+
+   从AFNetworking 3.0中之后，下面三个方法被弃用了：
+
+   ```
+   AFURLConnectionOperation 
+   AFHTTPRequestOperation 
+   AFHTTPRequestOperationManager 
+   ```
+
+   依次被下面三个类代替了，同时请求方法也跟着改变了。
+
+   ```
+   AFURLSessionManager 
+   AFHTTPSessionManager 
+   AFNetworkReachabilityManager
+   ```
+
+3. AFNetworking 3.0 相关请求方法：
+
+   - GET
+
+     ```
+       //创建请求管理者
+         AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+     
+         manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+         //根据情况定义返回类型有可能是Json有可能是html
+         manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json",@"text/json",@"text/javascript",@"text/html", nil];
+         //请求
+         [manager GET:URL parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
+             //数据请求的进度
+         } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+             //数据请求成功后，返回 responseObject 结果集
+         } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+         }];
+     ```
+
+   - POST
+
+     ```
+         AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+         manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+         manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json",@"text/json",@"text/javascript",@"text/html", nil];
+         NSMutableDictionary *parameters = @{@"":@"",@"":@""}.mutableCopy;
+         [manager POST:URL parameters:parameters progress:^(NSProgress * _Nonnull uploadProgress) {
+         } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+         } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+         }];
+     ```
+
+   - Download
+
+     ```
+         //1.创建管理者对象
+         AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+         //2.确定请求的URL地址
+         NSURL *url = [NSURL URLWithString:@""];
+     
+         //3.创建请求对象
+         NSURLRequest *request = [NSURLRequest requestWithURL:url];
+     
+         //下载任务
+         NSURLSessionDownloadTask *task = [manager downloadTaskWithRequest:request progress:^(NSProgress * _Nonnull downloadProgress) {
+             //查看下下载进度
+             NSLog(@"%lf",1.0 * downloadProgress.completedUnitCount / downloadProgress.totalUnitCount);
+     
+         } destination:^NSURL * _Nonnull(NSURL * _Nonnull targetPath, NSURLResponse * _Nonnull response) {
+             //下载地址
+             WKNSLog(@"默认下载地址:%@",targetPath);
+     
+             //设置下载路径，通过沙盒获取缓存地址，最后返回NSURL对象
+             NSString *filePath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)lastObject];
+             return [NSURL URLWithString:filePath];
+     
+         } completionHandler:^(NSURLResponse * _Nonnull response, NSURL * _Nullable filePath, NSError * _Nullable error) {
+     
+             //下载完成调用的方法
+             WKNSLog(@"下载完成：");
+             WKNSLog(@"%@--%@",response,filePath);
+     
+         }];
+     
+         //开始启动任务
+         [task resume];
+     
+     }
+     ```
+
+   - Upload
+
+     ```
+     - (void)upLoad1{
+     
+         //1。创建管理者对象
+         AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+     
+         //2.上传文件
+         NSDictionary *dic = @{@"":@""};
+     
+         NSString *urlString = @"";
+         [manager POST:urlString parameters:dic constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+             //上传文件参数
+             UIImage *iamge = [UIImage imageNamed:@"xxxx.png"];
+             NSData *data = UIImagePNGRepresentation(iamge);
+             //这个就是参数
+             [formData appendPartWithFileData:data name:@"file" fileName:@"xxx.png" mimeType:@"image/png"];
+         } progress:^(NSProgress * _Nonnull uploadProgress) {
+             //打印下上传进度
+             NSLog(@"%lf",1.0 *uploadProgress.completedUnitCount / uploadProgress.totalUnitCount);
+         } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+             //请求成功
+             NSLog(@"请求成功：%@",responseObject);
+         } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+         }];
+     }
+     ```
+
+参考：[iOS-AFNetworking 2.0 和AFNetworking 3.0 区别及具体用法](https://blog.csdn.net/SSY_1992/article/details/78953641)
+
+### 57. NSURLSession
+
+- NSURLSession 概述
+
+Session翻译为中文意思是会话，我们知道，在七层网络协议中有物理层->数据链路层->网络层->传输层->会话层->表示层->应用层，那我们可以将NSURLSession类理解为会话层，用于管理网络接口的创建、维护、删除等等工作，我们要做的工作也只是会话层之后的层即可，底层的工作NSURLSession已经帮我们封装好了。
+
+NSURLSessionTask及三个子类继承关系：
+
+![ns-url-session-task](./img/ns-url-session-task.png)
+
+- NSURLSession使用
+  - 第一步：创建NSURLSession对象
+  - 第二步：使用NSURLSession对象创建Task
+  - 第三步：启动任务
+
+- GET请求：
+
+```
+//1、创建NSURLSession对象
+NSURLSession *session = [NSURLSession sharedSession];
+
+//2、利用NSURLSession创建任务(task)
+NSURL *url = [NSURL URLWithString:@"http://www.xxx.com/login?username=myName&pwd=myPsd"];
+
+NSURLSessionDataTask *task = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+    
+    NSLog(@"%@",[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]);
+    //打印解析后的json数据
+    //NSLog(@"%@", [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil]);
+
+}];
+
+//3、执行任务
+[task resume];
+```
+
+- POST请求
+
+```
+//1、创建NSURLSession对象
+NSURLSession *session = [NSURLSession sharedSession];
+
+//2、利用NSURLSession创建任务(task)
+NSURL *url = [NSURL URLWithString:@"http://www.xxx.com/login"];
+
+//创建请求对象里面包含请求体
+NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+request.HTTPMethod = @"POST";
+request.HTTPBody = [@"username=myName&pwd=myPsd" dataUsingEncoding:NSUTF8StringEncoding];
+
+NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+      
+    NSLog(@"%@",[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]);
+    //打印解析后的json数据
+    //NSLog(@"%@", [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil]);
+
+}];
+
+//3、执行任务
+ [task resume];
+```
+
+参考：[iOS NSURLSession 详解](https://juejin.im/entry/58aacabcac502e006973ce03)
+
+### 58. 离屏渲染
+
+
+
+
 
 
 
@@ -457,9 +861,7 @@ iOS上报的错误是一堆内存地址和偏移量，开发者无法从中获�
 
 待补充：
 
-5. swift与oc的比较
 2. 散列函数有哪些
-3. AFNetworking 2.0 与 3.0 有什么区别
-4. __block
-5. 离屏渲染
-6. 设计模式
+9. 离屏渲染
+10. 设计模式
+11. 二分法
