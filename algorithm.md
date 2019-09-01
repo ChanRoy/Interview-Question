@@ -1273,9 +1273,68 @@ CHTLinkedList.m
 @end
 ```
 
-
-
 参考：[iOS 数据结构之链表](https://www.jianshu.com/p/12fe060811f2)
+
+### 8. 二分法查找有序数组某个元素（Binary Search）
+
+​		二分查找（binary search），也称作折半查找（half-interval search），每次划分一半进行下一步搜索。
+
+1. 条件：
+
+   假设要查找的元素为X；
+
+   数组是从小到大排列。
+
+2. 步骤：
+
+   - 先取出数组中间的元素
+
+   - 把中间元素和X进行比较，如果中间元素大于X，那么X就位于第一个元素，和中间元素之间。反之，如果中间元素小于X，那么X就位于中间元素和最大值之间。
+
+   - 这样进行比较之后，我们的查找范围就小了一半。
+
+3. 代码：
+
+   ```
+   - (void)binarySearchWithArray:(NSArray <NSNumber *>*)array number:(NSInteger)num {
+       
+       NSInteger max = array.count - 1;
+       NSInteger min = 0;
+       NSInteger mid = (min + max) / 2;
+       
+       for (NSInteger i = 0; i < array.count; i ++) {
+           
+           if ([array[mid] integerValue] == num) {
+               
+               NSLog(@"查找次数为：%ld", i);
+               NSLog(@"寻找值的位置为：%ld", mid);
+               return;
+           }else if ([array[mid] integerValue] > num) {
+               
+               max = mid - 1;
+               mid = (min + max) / 2;
+           }else if ([array[mid] integerValue] < num) {
+               
+               min = mid + 1;
+               mid = (min + max) / 2;
+           }
+       }
+   }
+   ```
+
+4. 时间复杂度
+
+   比如：总共有n个元素，每次查找的区间大小就是n，n/2，n/4，…，n/2^k（接下来操作元素的剩余个数），其中k就是循环的次数。 
+   由于n/2^k取整后>=1，即令n/2^k=1， 
+   可得k=log2n,（是以2为底，n的对数），所以时间复杂度可以表示为：
+   $$
+   \log_2n
+   $$
+   
+
+   
+
+
 
 
 
