@@ -509,6 +509,8 @@ iOS上报的错误是一堆内存地址和偏移量，开发者无法从中获�
 
 ​			[深入研究Block捕获外部变量和__block实现原理](https://halfrost.com/ios_block/)（相对来说这篇文章写得比较详细）
 
+​			[iOS 面试题·Block 的原理，Block 的属性修饰词为什么用 copy，使用 Block 时有哪些要注意的？](https://ioscaff.com/articles/221?order_by=vote_count&)（这篇也写得比较详细）
+
 ### 53. ViewController 生命周期
 
 1. init(coder:)
@@ -1115,7 +1117,92 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHand
 
 ### 60. 动画
 
+1. CoreAnimation
 
+   ![core-animation](./img/core-animation.png)
+
+   这个动画类的继承图，iOS9时又添加了`CASpringAnimation`,继承自`CABasicAnimation`。
+
+   每一个动画类代表了某一种类型的动画，代表着它们有着不同的变化规律。
+
+   - CAAnimation
+
+     这个是基类，所以它不会有特别有特色的属性，而是一些通用性的东西。在属性里值得注意的是`timingFunction`和`delegate`。`timingFunction`提供了时间的变化函数，可以理解成时间流速变快或变慢。`delegate`就两个方法，通知你动画开始了和结束了，没什么特别的。
+
+   - CAMediaTiming
+
+     这是一个协议，`CAAnimation`实现了这个协议，里面有一些跟时间相关的属性挺有用的：
+
+     - duration 动画时间
+     - repeatCount 重复次数
+     - autoreverses 自动反转动画，如一个动画是从A到B，这个为true时，会接着执行从B再到A的动画。
+
+   - CAPropertyAnimation
+
+     这个也还是一个抽象类，跟`UIGestureRecognizer`一样直接构建对象用不了的。但它的属性还是值得解读一下：
+
+     - `keyPath`而且有一个以`keyPath`为参数的构建方法，所以这个属性是核心级别。回到动画的定义上，除了需要**变化规律**外，还需要变化内容。巧妇难为无米之炊，动画是一种连续的变化，那就需要知道**是什么在变化**。这里选取内容的方式就是指定一个属性，这个属性是谁的属性？`CALayer`的，动画是加载在layer上的，layer是动画的载体。打开`CALayer`的文档，在属性的注释里写着`Animatable`的就是可以进行动画的属性，也就是可以填入到这个keyPath里的东西。 之所以是keyPath而不是key，是因为可以像`position.y`这样使用点语法指定连续一连串的key。
+
+     从CAPropertyAnimation继承的动画，也都是按照这种方式来指定变化内容的。
+
+     - `additive`和`cumulative`需要例子才好证实效果，到下面再说。
+     - `valueFunction`这个属性类为`CAValueFunction`，只能通过名称来构建，甚至没有数据输入的地方，也是从这突然看明白`CAPropertyAnimation`构建对象是没有意义的。因为没有数据输入，就没有动画，就没法实际应用，这个类只是为了封装的需要而创建的。
+
+     总结一下，**动画需要3个基本要素：内容、时间和变化规律**，不同的动画都是在这3者上有差异。
+
+   - CABasicAnimation
+
+     这个类就增加了3个属性：`fromValue` `toValue` `byValue`。这3个属性就正好是提供了输入数据，确定了开始和结束状态。
+
+   - CAKeyframeAnimation
+
+     关键帧动画，帧指一副画面，动画就是一帧帧画面连续变动而得到的。而关键帧，是特殊的帧，举个例子，一个物体按照矩形的路线运动，那么提供4个角的坐标就可以了，其他位置可以通过4个角的位置算出来。而关键帧就是那些不可缺少的关键的画面，而其他帧可以通过这些关键帧推算出来。
+
+     所以关键帧动画就是提供若干关键的数据，系统通过这些关键数据，推算出整个流程，然后完成动画。
+
+     有了这个理解，再看`CAKeyframeAnimation`的属性里的`values`和`keyTimes`就好理解了。
+
+   - CATransition
+
+     这个看似简单，用起来却似乎有点摸不着头脑。`transition`过渡的意思，这个动画用来完成layer的两种状态之间的过渡。
+
+   - CAAnimationGroup
+
+     这个没什么可说的，让多个动画一起执行，显示出符合效果。值得注意的是：
+
+     - group的时间是有意义的，但它不影响子动画怎么执行，只是到了时间就停止所有子动画，不管子动画是否结束。所以在超出自动化时间后，修改这个值就没意义了。
+     - 每个子动画是独立执行的，如动画1时长1s,动画2时长5s,那么后4s就是动画2的效果。
+
+   - CASpringAnimation
+
+     Spring是弹簧的意思，这个动画就是像弹簧一样摆动的效果。
+
+     然后`CASpringAnimation`自身的属性用于计算弹簧的运动模式：
+
+     - mass 越大运动速度会慢，但衰减慢
+     - stiffness 越大，速度越快，弹性越好
+     - damping 越大衰减越快
+     - initialVelocity 初始速度，越大动画开始时越快
+
+2. CALayer子类的特殊动画
+
+   - CATextLayer
+
+     `CATextLayer`有两个动画属性,`fontSize`和`foregroundColor`。
+
+   - CAShapeLayer
+
+     `CAShapeLayer`里有许多动画属性，但最神奇的就是`strokeStart`和`strokeEnd`,特别是两个组合使用的使用简直刷新认知！！！
+
+     `CAShapeLayer`的图形是靠路径提供的，而`strokeStart`和`strokeEnd`这两个属性就是用来设定绘制的开始和结束为止。0代表path的开始位置，1代表path的结束为止，比如`strokeStart`设为0.5，`strokeEnd`设为1，那么layer就只绘制path的后半段。
+
+3. 交互式动画
+
+   iOS10有了`UIViewPropertyAnimator`，可以控制动画的流程，核心是`fractionComplete`这个参数，可以指定动画停留在某个位置。这里用一个pan手势来调整`fractionComplete`，实现手指滑动时，动画跟随执行的效果。
+
+   这感觉有点像，拖动进度条然后电影前进或后退，随意控制进度。
+
+参考：[iOS动画全面解析](https://juejin.im/post/5bd140abf265da0ae6778180)
 
 --------
 
@@ -1124,3 +1211,4 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHand
 待补充：
 
 2. 散列函数有哪些
+2. 关联是如何存储的
