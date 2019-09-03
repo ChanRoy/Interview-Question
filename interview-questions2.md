@@ -31,7 +31,9 @@ iOS 面试题积累 - iOS 篇2
 55. [Swift、OC比较](./interview-questions2.md#55-swiftoc比较)
 56. [AFNetworking 2.0 与 3.0 版本有什么区别](./interview-questions2.md#56-afnetworking-20-与-30-版本有什么区别)
 57. [NSURLSession](./interview-questions2.md#57-nsurlsession)
-58. 
+58. [离屏渲染](./interview-questions2.md#58-离屏渲染)
+59. [设计模式](./interview-questions2.md#59-设计模式)
+60. [动画](./interview-questions2.md#60-动画)
 
 ------
 
@@ -1203,12 +1205,3 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHand
    这感觉有点像，拖动进度条然后电影前进或后退，随意控制进度。
 
 参考：[iOS动画全面解析](https://juejin.im/post/5bd140abf265da0ae6778180)
-
---------
-
-
-
-待补充：
-
-2. 散列函数有哪些
-2. 关联是如何存储的

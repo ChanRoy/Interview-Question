@@ -439,6 +439,8 @@ Runloop 是和线程紧密相关的一个基础组件，是很多线程有关功
 
   Runloop 是什么？Runloop 还是比较顾名思义的一个东西，说白了就是一种循环，只不过它这种循环比较高级。一般的 while 循环会导致 CPU 进入忙等待状态，而 Runloop 则是一种“闲”等待，这部分可以类比 Linux 下的 epoll。当没有事件时，Runloop 会进入休眠状态，有事件发生时， Runloop 会去找对应的 Handler 处理事件。Runloop 可以让线程在需要做事的时候忙起来，不需要的话就让线程休眠。
 
+  ![runloop](./img/runloop.jpg)
+
   Runloop 在线程中的作用：从 input source 和 timer source 接受事件，然后在线程中处理事件。
 
 - Runloop 与线程
@@ -509,7 +511,43 @@ Runloop 是和线程紧密相关的一个基础组件，是很多线程有关功
 
   这里就是添加了一个计时器，由于指定了 NSRunLoopCommonModes，所以不管 RunLoop 出于什么状态，都执行这个计时器任务。
 
-  参考：[ Runloop](https://hit-alibaba.github.io/interview/iOS/ObjC-Basic/Runloop.html)
+- runloop的应用
+
+  - NSTimer
+
+    这个不用过多解释，默认模式下拖动tableview会导致timer暂停，解决方法是把timer添加到runloop的commonMode。
+
+  - 保证线程的长时间存活
+
+    如果程序中，需要经常在子线程中执行任务，频繁的创建和销毁线程，会造成资源的浪费。这时候我们就可以使用RunLoop来让该线程长时间存活而不被销毁。例如AFNetworking 2.x版本就利用runloop保证处理NSURLConnection和delegate的线程常驻。
+
+  - 监控卡顿
+
+    主线程的RunLoop是在应用启动时自动开启的，也没有超时时间，所以正常情况下，主线程的RunLoop 只会在 2—9 之间无限循环下去。 
+    那么，我们只需要在主线程的RunLoop中添加一个observer，检测从 kCFRunLoopBeforeSources 到 kCFRunLoopBeforeWaiting 花费的时间 是否过长。如果花费的时间大于某一个阙值，我们就认为有卡顿，并把当前的线程堆栈转储到文件中，并在以后某个合适的时间，将卡顿信息文件上传到服务器。
+
+  - 让UITableView、UICollectionView等延迟加载图片
+
+    UITableView 的 cell 上显示网络图片，一般需要两步，第一步下载网络图片；第二步，将网络图片设置到UIImageView上。 
+    为了不影响滑动，第一步，我们一般都是放在子线程中来做，这个不做赘述。 
+    第二步，一般是回到主线程去设置。有了前两篇文章关于Mode的切换，想必你已经知道怎么做了。 
+    就是在为图片视图设置图片时，在主线程设置，并调用performSelector:withObject:afterDelay:inModes:方法。最后一个参数，仅设置一个NSDefaultRunLoopMode。
+
+  - 让应用起死回生
+
+    iOS应用崩溃，常见的崩溃信息有EXC_BAD_ACCESS、SIGABRT XXXXXXX,而这里分为两种情况，一种是未被捕获的异常，我们只需要添加一个回调函数，并在应用启动时调用一个 API即可；另一种是直接发送的 SIGABRT XXXXXXX,这里我们也需要监听各种信号，然后添加回调函数。
+
+    针对情况一，其实我们都见过。我们在收集App崩溃信息时，需要添加一个函数 NSSetUncaughtExceptionHandler(&HandleException)，参数 是一个回调函数，在回调函数里获取到异常的原因，当前的堆栈信息等保存到 dump文件，然后供下次打开App时上传到服务器。
+
+    其实，我们在HandleException回调函数中，可以获取到当前的RunLoop，然后获取该RunLoop中的所有Mode，手动运行一遍。
+
+    针对情况二，首先针对多种要捕获的信号，设置好回调函数，然后也是在回调函数中获取RunLoop，然后拿到所有的Mode，手动运行一遍。
+
+    注意：**这种方法只能防止第一次的crash**
+
+参考：[ Runloop](https://hit-alibaba.github.io/interview/iOS/ObjC-Basic/Runloop.html)
+
+​			[RunLoop总结：RunLoop的应用场景](https://blog.csdn.net/u011619283/article/details/53673255)
 
 ### 16. 关联对象（associatedObject）
 
@@ -546,8 +584,14 @@ typedef OBJC_ENUM(uintptr_t, objc_AssociationPolicy) {
 };
 ```
 
->关联对象又是如何实现并且管理的呢：
->
+关联对象又是如何实现并且管理的呢：
+
+![objc-association](./img/objc-association.png)
+
+**通过上图我们可以总结为：一个实例对象就对应一个ObjectAssociationMap，而ObjectAssociationMap中存储着多个此实例对象的关联对象的key以及ObjcAssociation，为ObjcAssociation中存储着关联对象的value和policy策略。**
+
+**由此我们可以知道关联对象并不是放在了原来的对象里面，而是自己维护了一个全局的map用来存放每一个对象及其对应关联属性表格。**
+
 >- 关联对象其实就是 `ObjcAssociation` 对象
 >- 关联对象由 `AssociationsManager` 管理并在 `AssociationsHashMap` 存储
 >- 对象的指针以及其对应 `ObjectAssociationMap` 以键值对的形式存储在 `AssociationsHashMap` 中
@@ -555,6 +599,8 @@ typedef OBJC_ENUM(uintptr_t, objc_AssociationPolicy) {
 >- 每一个对象都有一个标记位 `has_assoc` 指示对象是否含有关联对象
 
 参考：[关联对象 AssociatedObject 完全解析](https://draveness.me/ao)
+
+​			[iOS底层原理总结 - 关联对象实现原理](https://www.jianshu.com/p/0f9b990e8b0a)
 
 ### 17. iOS各种锁
 
