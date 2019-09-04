@@ -252,7 +252,9 @@ c. 精准度更高的定时器
 
 结果：都是输出son。
 
-分析：不管是`self`、还是`super`，经过消息传递，最终处理消息的方法都是`NSObject`中的`- (Class)class`方法，指向消息接受者是一样的，都是son这个实例。
+分析：不管是`self`、还是`super`，经过消息传递，最终处理消息的方法都是`NSObject`中的`- (Class)class`方法，class方法没有被重写，并且指向消息接受者是一样的，都是son这个实例。
+
+参考：[OC 中 self 与 super 总结](https://www.cnblogs.com/markstray/p/5611878.html)
 
 ### 9. OC中对象的内存销毁时间表
 
@@ -842,6 +844,8 @@ isEqual方法是为了通过hash值来找到对象在hash表中的位置。
 >
 > 单个自动释放池的执行过程就是`objc_autoreleasePoolPush()` —> `[object autorelease]` —> `objc_autoreleasePoolPop(void *)`。
 
+在没有手加Autorelease Pool的情况下，Autorelease对象是在当前的`runloop`迭代结束时释放的，而它能够释放的原因是**系统在每个runloop迭代中都加入了自动释放池Push和Pop**
+
 参考：[AutoreleasePool底层实现原理](https://juejin.im/post/5b052282f265da0b7156a2aa)
 
 ### 23. FMDB是线程安全的吗？
@@ -1179,5 +1183,5 @@ Objective-C 中的三种 block `__NSMallocBlock__`、`__NSStackBlock__` 和 `__N
 
 ----
 
-下一篇：[iOS 面试题积累 - iOS 篇2](./interview-questions2)
+下一篇：[iOS 面试题积累 - iOS 篇2](./interview-questions2.md)
 
