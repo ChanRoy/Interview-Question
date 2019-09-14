@@ -1,6 +1,6 @@
 # Interview-Question
 
-iOS 面试题积累 - iOS 篇2
+iOS 面试题积累 - iOS 篇3
 
 ### 索引
 
@@ -38,9 +38,379 @@ iOS 面试题积累 - iOS 篇2
 
 参考：[谈谈对drawRect的理解](https://www.jianshu.com/p/7242bc413ca8)
 
+### 62. class 源码
+
+Class是一个objc_class结构体的指针
+
+```
+/// An opaque type that represents an Objective-C class.
+typedef struct objc_class *Class;
+```
+
+```
+struct objc_class {
+    Class isa  OBJC_ISA_AVAILABILITY;
+
+#if !__OBJC2__
+    Class super_class                                        OBJC2_UNAVAILABLE;
+    const char *name                                         OBJC2_UNAVAILABLE;
+    long version                                             OBJC2_UNAVAILABLE;
+    long info                                                OBJC2_UNAVAILABLE;
+    long instance_size                                       OBJC2_UNAVAILABLE;
+    struct objc_ivar_list *ivars                             OBJC2_UNAVAILABLE;
+    struct objc_method_list **methodLists                    OBJC2_UNAVAILABLE;
+    struct objc_cache *cache                                 OBJC2_UNAVAILABLE;
+    struct objc_protocol_list *protocols                     OBJC2_UNAVAILABLE;
+#endif
+
+} OBJC2_UNAVAILABLE;
+```
+
+参考：[Objective-C对象解析](https://www.jianshu.com/p/e3445ad41dbf)
+
+### 63. [Class class] [id class]
+
+我们觉得`[NSObject class]` 应该返回他是个什么东西也就是`isa`指针指向的内容，我们从这边入手。
+
+```
+- (id)self {
+    return self;
+}
+
++ (Class)class {
+    return self;
+}
+
+- (Class)class {
+    return object_getClass(self);
+}
+
++ (Class)superclass {
+    return self->superclass;
+}
+
+- (Class)superclass {
+    return [self class]->superclass;
+}
+
++ (BOOL)isMemberOfClass:(Class)cls {
+    return object_getClass((id)self) == cls;
+}
+
+- (BOOL)isMemberOfClass:(Class)cls {
+    return [self class] == cls;
+}
+```
+
+```
+Class object_getClass(id obj)
+{
+    if (obj) return obj->getIsa();
+    else return Nil;
+}
+```
+
+总结：
+
+类方法`+ (Class)class`返回类本身；
+
+实例方法`- (Class)class`返回isa指针，也就是他的类的指针，对于类则指向元类。
+
+### 64. 什么是堆？什么是栈？他们之间有什么区别和联系？
+
+请分别解释下操作系统和数据结构中的“堆”和“栈”概念。
+
+注意区分堆和栈在操作系统和数据结构中的区别。
+
+数据结构：
+
+> 栈就像装数据的桶或箱子.
+> 我们先从大家比较熟悉的栈说起吧，它是一种具有后进先出性质的数据结构，也就是说后存放的先取，先存放的后取。这就如同我们要取出放在箱子里面底下的东西（放入的比较早的物体），我们首先要移开压在它上面的物体（放入的比较晚的物体）。
+
+>堆像一棵倒过来的树
+>而堆就不同了，堆是一种经过排序的树形数据结构，每个结点都有一个值。通常我们所说的堆的数据结构，是指二叉堆。堆的特点是根结点的值最小（或最大），且根结点的两个子树也是一个堆。由于堆的这个特性，常用来实现优先队列，堆的存取是随意，这就如同我们在图书馆的书架上取书，虽然书的摆放是有顺序的，但是我们想取任意一本时不必像栈一样，先取出前面所有的书，书架这种机制不同于箱子，我们可以直接取出我们想要的书。
+
+操作系统：
+
+>内存中的栈区处于相对较高的地址以地址的增长方向为上的话，栈地址是向下增长的，栈中分配局部变量空间，
+>
+>堆区是向上增长的用于分配程序员申请的内存空间，一般堆的数据结构是链表。
+
+参考：[数据结构中的堆和栈 与 内存分配中的堆区和栈区 分析](https://blog.csdn.net/hustyangju/article/details/25286689)
+
+### 65. HTTP断点续传
+
+1. 简述
+
+   断点续传：指的是在上传/下载时，将任务（一个文件或压缩包）人为的划分为几个部分，每一个部分采用一个线程进行上传/下载，如果碰到网络故障，可以从已经上传/下载的部分开始继续上传/下载未完成的部分，而没有必要从头开始上传/下载。可以节省时间，提高速度。
+
+2. Range & Content-Range
+
+   HTTP1.1 协议（RFC2616）开始支持获取文件的部分内容，这为并行下载以及断点续传提供了技术支持。它通过在 Header 里两个参数实现的，客户端发请求时对应的是 Range ，服务器端响应时对应的是 Content-Range。
+
+   - Range
+
+     用于请求头中，指定第一个字节的位置和最后一个字节的位置，一般格式：
+
+     ```
+     Range:(unit=first byte pos)-[last byte pos]
+     ```
+
+   - Content-Range
+
+     用于响应头中，在发出带 Range 的请求后，服务器会在 Content-Range 头部返回当前接受的范围和文件总大小。一般格式：
+
+     ```
+     Content-Range: bytes (unit first byte pos) - [last byte pos]/[entity legth]
+     ```
+
+     而在响应完成后，返回的响应头内容也不同：
+
+     ```
+     HTTP/1.1 200 Ok（不使用断点续传方式） 
+     HTTP/1.1 206 Partial Content（使用断点续传方式）
+     ```
+
+**增强校验**
+
+在实际场景中，会出现一种情况，即在终端发起续传请求时，URL 对应的文件内容在服务器端已经发生变化，此时续传的数据肯定是错误的。如何解决这个问题了？显然此时需要有一个标识文件唯一性的方法。
+
+在 RFC2616 中也有相应的定义，比如实现 Last-Modified 来标识文件的最后修改时间，这样即可判断出续传文件时是否已经发生过改动。同时 FC2616 中还定义有一个 ETag 的头，可以使用 ETag 头来放置文件的唯一标识。
+
+3. Last-Modified
+
+   If-Modified-Since，和 Last-Modified 一样都是用于记录页面最后修改时间的 HTTP 头信息，只是 Last-Modified 是由服务器往客户端发送的 HTTP 头，而 If-Modified-Since 则是由客户端往服务器发送的头，可以看到，再次请求本地存在的 cache 页面时，客户端会通过 If-Modified-Since 头将先前服务器端发过来的 Last-Modified 最后修改时间戳发送回去，这是为了让服务器端进行验证，通过这个时间戳判断客户端的页面是否是最新的，如果不是最新的，则返回新的内容，如果是最新的，则返回 304 告诉客户端其本地 cache 的页面是最新的，于是客户端就可以直接从本地加载页面了，这样在网络上传输的数据就会大大减少，同时也减轻了服务器的负担。
+
+4. Etag
+
+   Etag（Entity Tags）主要为了解决 Last-Modified 无法解决的一些问题。
+
+   - 一些文件也许会周期性的更改，但是内容并不改变（仅改变修改时间），这时候我们并不希望客户端认为这个文件被修改了，而重新 GET。
+   - 某些文件修改非常频繁，例如：在秒以下的时间内进行修改（1s 内修改了 N 次），If-Modified-Since 能检查到的粒度是 s 级的，这种修改无法判断（或者说 UNIX 记录 MTIME 只能精确到秒）。
+   - 某些服务器不能精确的得到文件的最后修改时间。
+
+   为此，HTTP/1.1 引入了 Etag。Etag 仅仅是一个和文件相关的标记，可以是一个版本标记，例如：v1.0.0；或者说 “627-4d648041f6b80” 这么一串看起来很神秘的编码。但是 HTTP/1.1 标准并没有规定 Etag 的内容是什么或者说要怎么实现，唯一规定的是 Etag 需要放在 “” 内。
+
+5. If-Range
+
+   用于判断实体是否发生改变，如果实体未改变，服务器发送客户端丢失的部分，否则发送整个实体。一般格式：
+
+   ```
+   If-Range: Etag | HTTP-Date
+   ```
+
+   也就是说，If-Range 可以使用 Etag 或者 Last-Modified 返回的值。当没有 ETage 却有 Last-modified 时，可以把 Last-modified 作为 If-Range 字段的值。
+
+   If-Range 必须与 Range 配套使用。如果请求报文中没有 Range，那么 If-Range 就会被忽略。如果服务器不支持 If-Range，那么 Range 也会被忽略。
+
+   如果请求报文中的 Etag 与服务器目标内容的 Etag 相等，即没有发生变化，那么应答报文的状态码为 206。如果服务器目标内容发生了变化，那么应答报文的状态码为 200。
+
+   用于校验的其他 HTTP 头信息：If-Match/If-None-Match、If-Modified-Since/If-Unmodified-Since。
+
+**工作原理**
+
+Etag 由服务器端生成，客户端通过 If-Range 条件判断请求来验证资源是否修改。请求一个文件的流程如下：
+
+第一次请求：
+
+- 客户端发起 HTTP GET 请求一个文件。
+- 服务器处理请求，返回文件内容以及相应的 Header，其中包括 Etag（例如：627-4d648041f6b80）（假设服务器支持 Etag 生成并已开启了 Etag）状态码为 200。
+
+第二次请求（断点续传）：
+
+- 客户端发起 HTTP GET 请求一个文件，同时发送 If-Range（该头的内容就是第一次请求时服务器返回的 Etag：627-4d648041f6b80）。
+- 服务器判断接收到的 Etag 和计算出来的 Etag 是否匹配，如果匹配，那么响应的状态码为 206；否则，状态码为 200。
+
+参考：[HTTP 断点续传（分块传输）](https://blog.csdn.net/liang19890820/article/details/53215087)
+
+###  66. KVO底层原理
+
+- 问：iOS用什么方式实现对一个对象的KVO？（KVO的本质是什么？） 
+
+  答. 当一个对象使用了KVO监听，iOS系统会修改这个对象的isa指针，改为指向一个全新的通过Runtime动态创建的子类，子类拥有自己的set方法实现，set方法实现内部会顺序调用**willChangeValueForKey方法、原来的setter方法实现、didChangeValueForKey方法，而didChangeValueForKey方法内部又会调用监听器的observeValueForKeyPath:ofObject:change:context:监听方法。**
+
+- 问：如何手动触发KVO 
+
+  答. 被监听的属性的值被修改时，就会自动触发KVO。如果想要手动触发KVO，则需要我们自己调用**willChangeValueForKey和didChangeValueForKey**方法即可在不改变属性值的情况下手动触发KVO，并且这两个方法缺一不可。
+
+  参考：[iOS底层原理总结 - 探寻KVO本质](https://juejin.im/post/5adab70cf265da0b736d37a8)
+
+### 67. NSMutableArray 底层实现
+
+- NSMutableArray的内部数据结构如下:
+  offset: 有效数据起始位置偏移量
+  size: 实际占用的内存大小
+  used: 数组的实际的有效数据个数
+  *list: 实际内存的起始地址
+
+- 内部数据结构：环形缓冲区
+
+  参考：[NSMutableArray原理揭露](http://blog.joyingx.me/2015/05/03/NSMutableArray 原理揭露/)
+
+### 68. 并行、并发
+
+你吃饭吃到一半，电话来了，你一直到吃完了以后才去接，这就说明你不支持并发也不支持并行。
+你吃饭吃到一半，电话来了，你停了下来接了电话，接完后继续吃饭，这说明你支持并发。
+你吃饭吃到一半，电话来了，你一边打电话一边吃饭，这说明你支持并行。
+
+并发的关键是你有处理多个任务的能力，不一定要同时。
+并行的关键是你有同时处理多个任务的能力。
+
+所以我认为它们最关键的点就是：是否是『同时』。
+
+参考：https://www.zhihu.com/question/33515481
+
+### 69. runtime 之 class 与 meta class
+
+1. id
+
+   在 objc.h 中我们可以看到id的定义
+
+   ```
+   /// A pointer to an instance of a class.
+   typedef struct objc_object *id;
+   ```
+
+2. objc_object
+
+   在 objc.h 中我们也能看到如下定义
+
+   ```
+   /// Represents an instance of a class.
+   struct objc_object {
+       Class isa  OBJC_ISA_AVAILABILITY;
+   };
+   ```
+
+   于是我们知道了`objc_object`会被转换成 C 的结构体，而在这个struct中有一个 isa 指针，指向它的类 Class。
+
+3. Class
+
+   ```
+   /// An opaque type that represents an Objective-C class.
+   typedef struct objc_class *Class;
+   ```
+
+   发现 Class 本身指向的也是一个 C 的 struct `objc_class`。
+
+4. objc_class
+
+   在 runtime.h 中我们可以看到如下定义：
+
+   ```
+   struct objc_class {
+       Class isa  OBJC_ISA_AVAILABILITY;
+   
+   #if !__OBJC2__
+       Class super_class                                        OBJC2_UNAVAILABLE;
+       const char *name                                         OBJC2_UNAVAILABLE;
+       long version                                             OBJC2_UNAVAILABLE;
+       long info                                                OBJC2_UNAVAILABLE;
+       long instance_size                                       OBJC2_UNAVAILABLE;
+       struct objc_ivar_list *ivars                             OBJC2_UNAVAILABLE;
+       struct objc_method_list **methodLists                    OBJC2_UNAVAILABLE;
+       struct objc_cache *cache                                 OBJC2_UNAVAILABLE;
+       struct objc_protocol_list *protocols                     OBJC2_UNAVAILABLE;
+   #endif
+   
+   } OBJC2_UNAVAILABLE;
+   /* Use `Class` instead of `struct objc_class *` */
+   ```
+
+5. MetaClass
+
+   我们发现 Class 本身也有一个 `isa` 指针，指向的是它的 `MetaClass`。
+
+   - 当我们对一个实例发送消息时（-开头的方法），会在该 instance 对应的类的 methodLists 里查找。
+   - 当我们对一个类发送消息时（+开头的方法），会在该类的 MetaClass 的 methodLists 里查找。
+
+   这一过程如下图所示：
+
+   ![runtime-class](./img/runtime-class.jpg)
+
+   - 每个 Class 都有一个 isa 指针指向一个唯一的 Meta Class
+   - 每一个 Meta Class 的 isa 指针都指向最上层的 Meta Class，即 NSObject 的 MetaClass，而最上层的 MetaClass 的 isa 指针又指向自己
+
+参考：[iOS runtime 之 Class 和 MetaClass](https://www.jianshu.com/p/8036f15c91c6)
+
+### 70. Tagged Pointer
+
+> 由一个问题引入：
+>
+> 先定义：
+>
+> ```
+> @property (nonatomic, copy) NSString *test;
+> ```
+>
+> 方法一：
+>
+> ```
+>   for (int i = 0; i < 1000; i++) {
+>       dispatch_async(dispatch_get_global_queue(0, 0), ^{
+>           self.test = [NSString stringWithFormat:@"%@",@"123"];
+>       });
+>   }
+> ```
+>
+> 方法二：
+>
+> ```
+>   for (int i = 0; i < 1000; i++) {
+>       dispatch_async(dispatch_get_global_queue(0, 0), ^{
+>           self.test = [NSString stringWithFormat:@"%@",@"abababababababababababababab"];
+>       });
+>   }
+> ```
+>
+> 结果：方法一运行正常，方法二奔溃。奔溃是由于多线程访问了线程不安全的属性。
+>
+> 那为什么方法一不会奔溃？
+
+Tagged Pointer 是一个能够提升性能、节省内存的有趣的技术。
+
+- Tagged Pointer 专门用来存储小的对象，例如 **NSNumber** 和 **NSDate**（后来可以存储小字符串）
+- Tagged Pointer 指针的值不再是地址了，而是真正的值。所以，实际上它不再是一个对象了，它只是一个披着对象皮的普通变量而已。
+- 它的内存并不存储在堆中，也不需要 malloc 和 free，所以拥有极快的读取和创建速度。
+
+正常对象都是 指针指向对象的地址, 指针指向堆内存中的地址，所以方法二会因为多线程访问而造成坏内存访问，而TaggedPointer 则不会创建内存，而是在isa指针上做手脚。在指针上存放具体值。
+
+- 0结尾的为对象地址 因为以16位为基准 内存对齐
+- 当在`iOS平台` ，当尾数为1的时候为TaggedPointer
+
+参考：[Tagged Pointer](https://juejin.im/post/5d77751ce51d4561eb0b2714)
+
+### 71. AddressSanitizer VS Zombie
+
+1. `zombie`：
+   zombie的原理是用生成僵尸对象来替换dealloc的实现，当对象引用计数为0的时候，将需要dealloc的对象转化为僵尸对象。如果之后再给这个僵尸对象发消息，则抛出异常，并打印出相应的信息，调试者可以很轻松的找到异常发生位置。
+2. `AddressSanitizer`：
+   AddressSanitizer的原理是当程序创建变量分配一段内存时，将此内存后面的一段内存也冻结住，标识为中毒内存。
+
+参考：[Xcode7新特性AddressSanitizer](https://www.jianshu.com/p/ddb32f683a54)
+
+### 72. Swift Protocol VS OC Protocol
+
+OC中的Protocol因为支持可选方法、因为总被用于代理模式、因为OC不是强类型语言，导致了OC中的Protocol并没有发挥该有的作用。
+
+但Swift对Protocol做出了很好的支持：比如支持继承、支持结构体的遵守、支持默认实现等。
+
+### 73. 面向对象 VS 面向协议
+
+`面向对象`和`面向协议`的的最明显区别是`对抽象数据的使用方式`，面向对象采用的是**继承**，而`面向协议`采用的是**遵守协议**。在`面向协议`设计中，`Apple`建议我们更多的使用 **值类型**（`struct`）而非 **引用类型**（`class`）。[这篇文章](https://link.juejin.im/?target=https%3A%2F%2Fchausson.github.io%2F2017%2F03%2F01%2F%E9%9D%A2%E5%90%91%E5%8D%8F%E8%AE%AE-POP-%E4%BB%A5%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1-OOP%2F)中有一个很好的例子说明了`面向协议`比`面向对象`更符合**某些业务需求**。其中有飞机、汽车、自行车三种交通工具（均继承自父类交通工具）；老虎、马三种动物（均继承父类自动物）；在古代马其实也是一种交通工具，但是父类是动物，如果马也有交通工具的功能，则：
+
+如果采用`面向对象编程`，则需要既要继承动物，还要继承交通工具，但是父类交通工具有些功能马是不需要的。由此可见**继承**，作为**代码复用**的一种方式，**耦合性**还是太强。**事物往往是一系列特质的组合，而不单单是以一脉相承并逐渐扩展的方式构建的。**`以后慢慢会发现面向对象很多时候其实不能很好地对事物进行抽象。`
+
+如果采用`面向协议编程`，马只需要实现出行协议就可以拥有交通工具的功能了。**面向协议就是这样的抽离方式，更好的职责划分，更加具象化，职责更加单一。很明显面向协议的目的是为了降低代码的耦合性**。
+
+参考：[来一次有侧重点的区分Swift与Objective-C](https://juejin.im/post/5c653aa6e51d457fbf5dc298)
+
+
 -----
+
+
 
 待补充：
 
 1. TCP/UDP
-2. NSObject 运行时结构体
+2. 组件化

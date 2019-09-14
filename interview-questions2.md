@@ -1231,3 +1231,7 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHand
    这感觉有点像，拖动进度条然后电影前进或后退，随意控制进度。
 
 参考：[iOS动画全面解析](https://juejin.im/post/5bd140abf265da0ae6778180)
+
+------
+
+下一篇：[iOS 面试题积累 - iOS 篇3](./interview-questions3.md)
