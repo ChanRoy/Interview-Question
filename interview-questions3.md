@@ -4,7 +4,19 @@ iOS 面试题积累 - iOS 篇3
 
 ### 索引
 
-61. [teat]()
+61. [drawRect](./interview-questions3.md#61-drawrect)
+62. [class 源码](./interview-questions3.md#62-class-源码)
+63. [[Class class] [id class]](/interview-questions3.md#63-class-class-id-class)
+64. [什么是堆？什么是栈？他们之间有什么区别和联系？](./interview-questions3.md#64-什么是堆什么是栈他们之间有什么区别和联系)
+65. [HTTP断点续传](./interview-questions3.md#65-http断点续传)
+66. [KVO底层原理](./interview-questions3.md#66-kvo底层原理)
+67. [NSMutableArray 底层实现](/interview-questions3.md#67-nsmutablearray-底层实现)
+68. [并行、并发](./interview-questions3.md#68-并行并发)
+69. [runtime 之 class 与 meta class](./interview-questions3.md#69-runtime-之-class-与-meta-class)
+70. [Tagged Pointer](./interview-questions3.md#70-tagged-pointer)
+71. [AddressSanitizer VS Zombie](./interview-questions3.md#71-addresssanitizer-vs-zombie)
+72. [Swift Protocol VS OC Protocol](./interview-questions3.md#72-swift-protocol-vs-oc-protocol)
+73. [面向对象 VS 面向协议](./interview-questions3.md#73-面向对象-vs-面向协议)
 
 ------
 
